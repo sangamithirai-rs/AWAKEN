@@ -14,42 +14,48 @@ export default function AchievementsPage({
       title: "FIRST AWAKENING",
       description: "Complete your first System quest.",
       icon: Award,
-      unlocked: questCompletions >= 1,
+      progress: questCompletions,
+      target: 1,
     },
     {
       title: "DISCIPLINED",
       description: "Complete 3 quests.",
       icon: Shield,
-      unlocked: questCompletions >= 3,
+      progress: questCompletions,
+      target: 3,
     },
     {
       title: "KNOWLEDGE SEEKER",
       description: "Complete 5 quests.",
       icon: Brain,
-      unlocked: questCompletions >= 5,
+      progress: questCompletions,
+      target: 5,
     },
     {
       title: "FOCUS PROTOCOL",
       description: "Reach Level 2.",
       icon: Target,
-      unlocked: level >= 2,
+      progress: level,
+      target: 2,
     },
     {
       title: "RISING HUNTER",
       description: "Reach Level 5.",
       icon: Flame,
-      unlocked: level >= 5,
+      progress: level,
+      target: 5,
     },
     {
       title: "SHADOW MONARCH",
       description: "Reach Level 10.",
       icon: Zap,
-      unlocked: level >= 10,
+      progress: level,
+      target: 10,
     },
   ];
 
   const unlockedCount = achievements.filter(
-    (achievement) => achievement.unlocked
+    (achievement) => achievement.progress >= achievement.target
   ).length;
 
   return (
@@ -70,11 +76,13 @@ export default function AchievementsPage({
       <div className="achievements-grid">
         {achievements.map((achievement) => {
           const Icon = achievement.icon;
+          const unlocked = achievement.progress >= achievement.target;
+          const progress = Math.min(achievement.progress, achievement.target);
 
           return (
             <div
               className={`achievement-card ${
-                achievement.unlocked ? "unlocked" : "locked"
+                unlocked ? "unlocked" : "locked"
               }`}
               key={achievement.title}
             >
@@ -84,12 +92,25 @@ export default function AchievementsPage({
 
               <div>
                 <span className="achievement-status">
-                  {achievement.unlocked ? "UNLOCKED" : "LOCKED"}
+                  {unlocked ? "UNLOCKED" : "IN PROGRESS"}
                 </span>
 
                 <h3>{achievement.title}</h3>
 
                 <p>{achievement.description}</p>
+                <div
+                  className="achievement-progress"
+                  role="progressbar"
+                  aria-label={`${achievement.title} progress`}
+                  aria-valuemin={0}
+                  aria-valuemax={achievement.target}
+                  aria-valuenow={progress}
+                >
+                  <span style={{ width: `${(progress / achievement.target) * 100}%` }} />
+                </div>
+                <span className="achievement-progress-label">
+                  {progress}/{achievement.target}
+                </span>
               </div>
             </div>
           );

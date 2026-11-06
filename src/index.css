@@ -1598,6 +1598,491 @@ select:focus-visible {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Progression systems */
+
+.streak-card {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  justify-content: center;
+  gap: 14px;
+  padding: 18px;
+  border-color: rgba(255, 111, 61, 0.25);
+  background:
+    radial-gradient(ellipse at 100% 0, rgba(255, 111, 61, 0.11), transparent 55%),
+    rgba(9, 12, 21, 0.9);
+}
+
+.streak-card-heading,
+.recovery-status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.streak-icon,
+.analytics-metric-icon,
+.skill-tree-icon {
+  display: grid;
+  flex: 0 0 auto;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  color: #ff986f;
+  border: 1px solid rgba(255, 137, 92, 0.28);
+  background: rgba(255, 111, 61, 0.1);
+}
+
+.streak-card .system-label,
+.analytics-metric > span,
+.skill-tree-header > div:nth-child(2) > span {
+  color: rgba(209, 195, 255, 0.62);
+  font-size: 9px;
+  letter-spacing: 0.16em;
+}
+
+.streak-card h3 {
+  margin: 4px 0 0;
+  font-size: 13px;
+  letter-spacing: 0.08em;
+}
+
+.streak-readout {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.streak-readout > strong {
+  color: #ffad87;
+  font-size: 42px;
+  line-height: 1;
+}
+
+.streak-readout > span,
+.recovery-status {
+  color: rgba(227, 222, 245, 0.68);
+  font-size: 9px;
+  letter-spacing: 0.11em;
+}
+
+.streak-readout > i {
+  width: 1px;
+  height: 14px;
+  margin-inline: 5px;
+  background: rgba(196, 183, 232, 0.25);
+}
+
+.weekly-streak-readout {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: rgba(227, 222, 245, 0.62);
+  font-size: 9px;
+  letter-spacing: 0.1em;
+}
+
+.weekly-streak-readout > strong {
+  color: #d3c4ff;
+  font-size: 18px;
+}
+
+.weekly-streak-readout > i {
+  width: 1px;
+  height: 12px;
+  margin-inline: 3px;
+  background: rgba(196, 183, 232, 0.25);
+}
+
+.recovery-status {
+  color: #c9b8ff;
+}
+
+.streak-card > p {
+  margin: 0;
+  color: rgba(220, 218, 236, 0.57);
+  font-size: 10px;
+  line-height: 1.6;
+}
+
+.recovery-button {
+  min-height: 36px;
+  color: #fff1e9;
+  border: 1px solid rgba(255, 153, 111, 0.42);
+  background: rgba(255, 111, 61, 0.15);
+  cursor: pointer;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+}
+
+.recovery-button:hover {
+  border-color: rgba(255, 174, 139, 0.8);
+  background: rgba(255, 111, 61, 0.24);
+}
+
+.analytics-page {
+  grid-column: 1 / -1;
+  min-width: 0;
+  padding: clamp(18px, 3vw, 30px);
+}
+
+.analytics-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.analytics-metric {
+  display: flex;
+  min-width: 0;
+  min-height: 138px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 16px;
+  border: 1px solid rgba(169, 148, 230, 0.16);
+  background: rgba(10, 12, 22, 0.72);
+}
+
+.analytics-metric-icon {
+  width: 30px;
+  height: 30px;
+  color: #c4aeff;
+  border-color: rgba(164, 139, 236, 0.25);
+  background: rgba(136, 103, 210, 0.1);
+}
+
+.analytics-metric strong {
+  overflow: hidden;
+  max-width: 100%;
+  color: #f0eaff;
+  font-size: clamp(20px, 2vw, 27px);
+  text-overflow: ellipsis;
+}
+
+.analytics-metric strong small {
+  color: rgba(220, 211, 245, 0.54);
+  font-size: 12px;
+}
+
+.analytics-metric > small {
+  color: rgba(214, 208, 230, 0.52);
+  font-size: 9px;
+  line-height: 1.4;
+}
+
+.analytics-chart {
+  margin-top: 18px;
+  padding: 20px;
+  border: 1px solid rgba(169, 148, 230, 0.16);
+  background: rgba(8, 10, 19, 0.7);
+}
+
+.analytics-chart-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.analytics-chart-heading h3 {
+  margin: 5px 0 0;
+  font-size: 14px;
+  letter-spacing: 0.1em;
+}
+
+.analytics-chart-heading > span {
+  color: #d3c4ff;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+}
+
+.analytics-bars {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 10px;
+  height: 225px;
+  margin-top: 22px;
+}
+
+.analytics-day {
+  display: grid;
+  min-width: 0;
+  grid-template-rows: 18px minmax(0, 1fr) 18px 16px;
+  justify-items: center;
+  gap: 6px;
+}
+
+.analytics-day > strong {
+  color: rgba(233, 226, 249, 0.78);
+  font-size: 10px;
+}
+
+.analytics-bar-track {
+  display: flex;
+  width: min(100%, 38px);
+  height: 100%;
+  align-items: flex-end;
+  overflow: hidden;
+  border: 1px solid rgba(162, 143, 222, 0.12);
+  background: rgba(122, 103, 168, 0.08);
+}
+
+.analytics-bar-track > span {
+  width: 100%;
+  min-height: 0;
+  background: linear-gradient(180deg, #ffc19c, #9e7ce8);
+  transition: height 0.25s ease;
+}
+
+.analytics-day > span {
+  color: #d7ceec;
+  font-size: 10px;
+  text-transform: uppercase;
+}
+
+.analytics-day > small {
+  overflow: hidden;
+  max-width: 100%;
+  color: rgba(212, 204, 231, 0.46);
+  font-size: 8px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.analytics-note,
+.skill-tree-intro {
+  color: rgba(214, 208, 230, 0.56);
+  font-size: 10px;
+  line-height: 1.6;
+}
+
+.analytics-note {
+  margin: 14px 0 0;
+}
+
+.skill-tree-intro {
+  max-width: 760px;
+  margin: 14px 0 20px;
+}
+
+.skill-trees-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.skill-tree {
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid rgba(169, 148, 230, 0.17);
+  background: rgba(9, 11, 20, 0.7);
+}
+
+.skill-tree-header {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+}
+
+.skill-tree-header > strong {
+  grid-column: 2;
+  color: #d0bdff;
+  font-size: 12px;
+}
+
+.skill-tree-header h3 {
+  margin: 4px 0 0;
+  font-size: 13px;
+  letter-spacing: 0.08em;
+}
+
+.skill-tree > p {
+  min-height: 34px;
+  color: rgba(213, 207, 229, 0.56);
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+.skill-tree-nodes {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.skill-tree-nodes li {
+  position: relative;
+  display: grid;
+  grid-template-columns: 26px minmax(0, 1fr);
+  gap: 9px;
+  min-height: 76px;
+}
+
+.skill-tree-nodes li:not(:last-child)::after {
+  position: absolute;
+  top: 26px;
+  bottom: 0;
+  left: 12px;
+  width: 1px;
+  background: rgba(167, 146, 224, 0.19);
+  content: "";
+}
+
+.skill-node-marker {
+  z-index: 1;
+  display: grid;
+  width: 25px;
+  height: 25px;
+  place-items: center;
+  color: rgba(222, 216, 238, 0.48);
+  border: 1px solid rgba(171, 152, 223, 0.24);
+  background: #10101b;
+  font-size: 9px;
+}
+
+.skill-tree-nodes li.unlocked .skill-node-marker {
+  color: #ffd1ae;
+  border-color: rgba(255, 169, 129, 0.52);
+  background: rgba(255, 111, 61, 0.14);
+}
+
+.skill-node-content {
+  min-width: 0;
+  padding-bottom: 12px;
+}
+
+.skill-node-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.skill-node-heading strong {
+  color: #e6e0f3;
+  font-size: 9px;
+  letter-spacing: 0.08em;
+}
+
+.skill-node-heading span {
+  color: #b6a1ee;
+  font-size: 8px;
+}
+
+.skill-node-content p {
+  margin: 4px 0 7px;
+  color: rgba(210, 204, 225, 0.5);
+  font-size: 9px;
+}
+
+.skill-node-track,
+.boss-progress > div {
+  height: 4px;
+  overflow: hidden;
+  background: rgba(149, 129, 198, 0.15);
+}
+
+.skill-node-track > span,
+.boss-progress > div > span {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, #9070dc, #ffc19c);
+  transition: width 0.25s ease;
+}
+
+.boss-progress {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 9px;
+}
+
+.boss-progress > div {
+  width: min(140px, 55%);
+}
+
+.boss-progress > small {
+  color: rgba(218, 199, 255, 0.7);
+  font-size: 8px;
+  letter-spacing: 0.08em;
+}
+
+.custom-category-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 10px;
+}
+
+.custom-category-row button {
+  min-height: 42px;
+  padding: 0 14px;
+  color: #dfd4ff;
+  border: 1px solid rgba(172, 148, 236, 0.38);
+  background: rgba(122, 92, 186, 0.15);
+  cursor: pointer;
+  font-size: 9px;
+  letter-spacing: 0.1em;
+}
+
+.custom-category-row button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+@media (max-width: 1100px) {
+  .analytics-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .skill-trees-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .skill-tree > p {
+    min-height: 0;
+  }
+}
+
+@media (max-width: 600px) {
+  .analytics-page {
+    padding: 16px;
+  }
+
+  .analytics-metrics {
+    gap: 8px;
+  }
+
+  .analytics-metric {
+    min-height: 126px;
+    padding: 12px;
+  }
+
+  .analytics-chart {
+    padding: 13px 10px;
+  }
+
+  .analytics-bars {
+    gap: 4px;
+    height: 190px;
+  }
+
+  .analytics-day > small {
+    font-size: 7px;
+  }
+
+  .custom-category-row {
+    grid-template-columns: 1fr;
+  }
+}
 /* ================================
    FULL SYSTEM PAGES
 ================================ */
@@ -2252,6 +2737,29 @@ select:focus-visible {
   color: rgba(148, 163, 184, 0.7);
   font-size: 11px;
   line-height: 1.55;
+}
+
+.achievement-progress {
+  height: 4px;
+  margin-top: 12px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.14);
+}
+
+.achievement-progress span {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, #9276df, #d2bdff);
+  transition: width 0.25s ease;
+}
+
+.achievement-progress-label {
+  display: block;
+  margin-top: 5px;
+  color: rgba(205, 205, 223, 0.58);
+  font-size: 10px;
+  text-align: right;
 }
 
 @media (max-width: 700px) {
@@ -6115,4 +6623,82 @@ button:disabled {
   .system-sidebar .system-nav button {
     font-size: 6px;
   }
+}
+
+.quest-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
+}
+
+.quest-cadence,
+.quest-priority {
+  color: rgba(205, 198, 226, 0.62);
+  font-size: 7px;
+  letter-spacing: 0.1em;
+}
+
+.quest-priority.priority-high {
+  color: #ffb08d;
+}
+
+.quest-priority.priority-low {
+  color: rgba(205, 198, 226, 0.45);
+}
+
+.focus-history {
+  margin-top: 24px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(165, 146, 255, 0.16);
+}
+
+.focus-history-heading h3 {
+  margin: 5px 0 0;
+  color: #f0edfc;
+  font-size: 14px;
+  letter-spacing: 0.12em;
+}
+
+.focus-history-empty {
+  color: rgba(205, 205, 223, 0.58);
+  font-size: 11px;
+}
+
+.focus-history ol {
+  display: grid;
+  gap: 6px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.focus-history li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 4px 12px;
+  padding: 10px 12px;
+  border: 1px solid rgba(146, 130, 202, 0.16);
+  background: rgba(10, 12, 20, 0.56);
+}
+
+.focus-history li > span {
+  min-width: 0;
+  overflow: hidden;
+  color: #e8e2fa;
+  font-size: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.focus-history li time {
+  color: rgba(205, 198, 226, 0.52);
+  font-size: 9px;
+}
+
+.focus-history li strong {
+  grid-column: 1 / -1;
+  color: #c4b0ff;
+  font-size: 8px;
+  letter-spacing: 0.1em;
 }

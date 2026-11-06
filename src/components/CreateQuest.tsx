@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { Plus, X } from "lucide-react";
-
-export type AttributeType =
-  | "strength"
-  | "intelligence"
-  | "discipline"
-  | "focus"
-  | "consistency";
+import type {
+  Attribute,
+  NewQuest,
+  QuestCadence,
+  QuestCategory,
+  QuestKind,
+  QuestPriority,
+} from "../types/game";
 
 type Difficulty = "EASY" | "NORMAL" | "HARD";
 
@@ -15,22 +16,30 @@ function isDifficulty(value: string): value is Difficulty {
 }
 
 type CreateQuestProps = {
-  onCreate: (quest: {
-    title: string;
-    description: string;
-    xp: number;
-    type: string;
-    attribute: AttributeType;
-  }) => void;
+  onCreate: (quest: NewQuest) => void;
+  categories: string[];
+  onAddCategory: (category: string) => string | null;
 };
 
-export default function CreateQuest({ onCreate }: CreateQuestProps) {
+const builtInCategories = ["DAILY", "FITNESS", "STUDY", "CODING", "PROJECT", "SIDE", "PERSONAL"];
+
+export default function CreateQuest({
+  onCreate,
+  categories,
+  onAddCategory,
+}: CreateQuestProps) {
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [type, setType] = useState("DAILY");
+  const [type, setType] = useState<QuestCategory>("DAILY");
+  const [cadence, setCadence] = useState<QuestCadence>("DAILY");
+  const [priority, setPriority] = useState<QuestPriority>("NORMAL");
+  const [kind, setKind] = useState<QuestKind>("STANDARD");
+  const [goalCount, setGoalCount] = useState(3);
+  const [creatingCategory, setCreatingCategory] = useState(false);
+  const [categoryDraft, setCategoryDraft] = useState("");
   const [difficulty, setDifficulty] = useState<Difficulty>("NORMAL");
-  const [attribute, setAttribute] = useState<AttributeType>("discipline");
+  const [attribute, setAttribute] = useState<Attribute>("discipline");
 
   const xpByDifficulty: Record<Difficulty, number> = {
     EASY: 50,
@@ -38,7 +47,7 @@ export default function CreateQuest({ onCreate }: CreateQuestProps) {
     HARD: 150,
   };
 
-  const defaultAttributeForType = (questType: string): AttributeType => {
+  const defaultAttributeForType = (questType: QuestCategory): Attribute => {
     switch (questType) {
       case "FITNESS":
         return "strength";
@@ -54,9 +63,18 @@ export default function CreateQuest({ onCreate }: CreateQuestProps) {
     }
   };
 
-  const handleTypeChange = (newType: string) => {
+  const handleTypeChange = (newType: QuestCategory) => {
     setType(newType);
     setAttribute(defaultAttributeForType(newType));
+  };
+
+  const handleAddCategory = () => {
+    const category = onAddCategory(categoryDraft);
+    if (!category) return;
+    setType(category);
+    setAttribute(defaultAttributeForType(category));
+    setCategoryDraft("");
+    setCreatingCategory(false);
   };
 
   const handleCreate = () => {
@@ -65,16 +83,27 @@ export default function CreateQuest({ onCreate }: CreateQuestProps) {
     onCreate({
       title: title.trim(),
       description: description.trim() || "Custom System quest",
-      xp: xpByDifficulty[difficulty as keyof typeof xpByDifficulty],
+      xp: xpByDifficulty[difficulty] * (kind === "BOSS" ? goalCount : 1),
       type,
       attribute,
+      cadence: kind === "BOSS" ? "ONCE" : cadence,
+      priority,
+      kind,
+      goalCount: kind === "BOSS" ? goalCount : 1,
+      currentCount: 0,
     });
 
     setTitle("");
     setDescription("");
     setType("DAILY");
+    setCadence("DAILY");
+    setPriority("NORMAL");
     setDifficulty("NORMAL");
     setAttribute("discipline");
+    setKind("STANDARD");
+    setGoalCount(3);
+    setCreatingCategory(false);
+    setCategoryDraft("");
     setOpen(false);
   };
 
@@ -147,16 +176,20 @@ export default function CreateQuest({ onCreate }: CreateQuestProps) {
             CATEGORY
             <select
               id="quest-category"
-              value={type}
-              onChange={(event) => handleTypeChange(event.target.value)}
+              value={creatingCategory ? "__new_category__" : type}
+              onChange={(event) => {
+                if (event.target.value === "__new_category__") {
+                  setCreatingCategory(true);
+                  return;
+                }
+                setCreatingCategory(false);
+                handleTypeChange(event.target.value);
+              }}
             >
-              <option value="DAILY">DAILY</option>
-              <option value="FITNESS">FITNESS</option>
-              <option value="STUDY">STUDY</option>
-              <option value="CODING">CODING</option>
-              <option value="PROJECT">PROJECT</option>
-              <option value="SIDE">SIDE</option>
-              <option value="PERSONAL">PERSONAL</option>
+              {[...new Set([...builtInCategories, ...categories])].map((category) => (
+                <option value={category} key={category}>{category}</option>
+              ))}
+              <option value="__new_category__">+ CREATE CATEGORY</option>
             </select>
           </label>
 
@@ -178,15 +211,103 @@ export default function CreateQuest({ onCreate }: CreateQuestProps) {
           </label>
         </div>
 
+        {creatingCategory && (
+          <div className="custom-category-row">
+            <label htmlFor="quest-new-category">
+              NEW CATEGORY
+              <input
+                id="quest-new-category"
+                value={categoryDraft}
+                onChange={(event) => setCategoryDraft(event.target.value)}
+                maxLength={24}
+                placeholder="e.g. HEALTH"
+              />
+            </label>
+            <button type="button" onClick={handleAddCategory} disabled={!categoryDraft.trim()}>
+              ADD CATEGORY
+            </button>
+          </div>
+        )}
+
+        <div className="form-row">
+          <label htmlFor="quest-kind">
+            QUEST TYPE
+            <select
+              id="quest-kind"
+              value={kind}
+              onChange={(event) => {
+                const nextKind = event.target.value as QuestKind;
+                setKind(nextKind);
+                if (nextKind === "BOSS") setCadence("ONCE");
+              }}
+            >
+              <option value="STANDARD">STANDARD QUEST</option>
+              <option value="BOSS">BOSS QUEST</option>
+            </select>
+          </label>
+
+          {kind === "BOSS" ? (
+            <label htmlFor="quest-goal-count">
+              OBJECTIVE STEPS
+              <input
+                id="quest-goal-count"
+                type="number"
+                min={2}
+                max={20}
+                step={1}
+                value={goalCount}
+                onChange={(event) => {
+                  const value = Number(event.target.value);
+                  if (Number.isInteger(value) && value >= 2 && value <= 20) {
+                    setGoalCount(value);
+                  }
+                }}
+              />
+            </label>
+          ) : (
+            <div className="quest-preview">
+              <span>QUEST FLOW</span>
+              <strong>ONE CLEAR // ONE REWARD</strong>
+            </div>
+          )}
+        </div>
+
+        <div className="form-row">
+          <label htmlFor="quest-cadence">
+            REPEAT
+            <select
+              id="quest-cadence"
+              value={cadence}
+              onChange={(event) => setCadence(event.target.value as QuestCadence)}
+              disabled={kind === "BOSS"}
+            >
+              <option value="DAILY">DAILY</option>
+              <option value="WEEKLY">WEEKLY</option>
+              <option value="ONCE">ONE-TIME</option>
+            </select>
+          </label>
+
+          <label htmlFor="quest-priority">
+            PRIORITY
+            <select
+              id="quest-priority"
+              value={priority}
+              onChange={(event) => setPriority(event.target.value as QuestPriority)}
+            >
+              <option value="LOW">LOW</option>
+              <option value="NORMAL">NORMAL</option>
+              <option value="HIGH">HIGH</option>
+            </select>
+          </label>
+        </div>
+
         <div className="form-row">
           <label htmlFor="quest-attribute">
             TARGET ATTRIBUTE
             <select
               id="quest-attribute"
               value={attribute}
-              onChange={(event) =>
-                setAttribute(event.target.value as AttributeType)
-              }
+              onChange={(event) => setAttribute(event.target.value as Attribute)}
             >
               <option value="strength">STRENGTH</option>
               <option value="intelligence">INTELLIGENCE</option>
@@ -199,7 +320,7 @@ export default function CreateQuest({ onCreate }: CreateQuestProps) {
           <div className="quest-preview">
             <span>REWARD</span>
             <strong>
-              +{xpByDifficulty[difficulty as keyof typeof xpByDifficulty]} XP // +1{" "}
+              +{xpByDifficulty[difficulty] * (kind === "BOSS" ? goalCount : 1)} XP // +1{" "}
               {attribute.toUpperCase()}
             </strong>
           </div>

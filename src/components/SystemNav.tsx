@@ -2,6 +2,7 @@ import {
   Activity,
   Award,
   Backpack,
+  ChartNoAxesColumnIncreasing,
   Clock3,
   Sparkles,
   Target,
@@ -11,6 +12,7 @@ export type Page =
   | "SYSTEM"
   | "QUESTS"
   | "FOCUS"
+  | "ANALYTICS"
   | "SKILLS"
   | "ACHIEVEMENTS"
   | "INVENTORY";
@@ -30,6 +32,7 @@ export default function SystemNav({
     { label: "SYSTEM", icon: Sparkles },
     { label: "QUESTS", icon: Target },
     { label: "FOCUS", icon: Clock3 },
+    { label: "ANALYTICS", icon: ChartNoAxesColumnIncreasing },
     { label: "SKILLS", icon: Activity },
     { label: "ACHIEVEMENTS", icon: Award },
     { label: "INVENTORY", icon: Backpack },

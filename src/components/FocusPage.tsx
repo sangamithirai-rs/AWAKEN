@@ -1,18 +1,24 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Pause, Play, RotateCcw, Target } from "lucide-react";
 import { sound } from "../utils/soundEffects";
+import type { FocusSession } from "../types/game";
 
 type FocusPageProps = {
-  onSessionComplete: (xp: number, task?: string) => void;
+  onSessionComplete: (session: FocusSession) => void;
+  sessions: FocusSession[];
 };
 
 export default function FocusPage({
   onSessionComplete,
+  sessions,
 }: FocusPageProps) {
   const [minutes, setMinutes] = useState(25);
-  const [secondsLeft, setSecondsLeft] = useState(25 * 60);
+  const [remainingMs, setRemainingMs] = useState(25 * 60_000);
   const [running, setRunning] = useState(false);
   const [task, setTask] = useState("");
+  const [hasActiveSession, setHasActiveSession] = useState(false);
+  const deadlineRef = useRef<number | null>(null);
+  const sessionIdRef = useRef<string | null>(null);
 
   const sessionXP = Math.round(minutes * 2);
 
@@ -20,33 +26,70 @@ export default function FocusPage({
     if (!running) return;
 
     const interval = setInterval(() => {
-      if (secondsLeft <= 1) {
+      const remaining = Math.max(0, (deadlineRef.current ?? Date.now()) - Date.now());
+      setRemainingMs(remaining);
+
+      if (remaining === 0) {
         setRunning(false);
-        setSecondsLeft(minutes * 60);
-        onSessionComplete(sessionXP, task.trim());
+        deadlineRef.current = null;
+        const id = sessionIdRef.current;
+        sessionIdRef.current = null;
+        setHasActiveSession(false);
+        if (id) {
+          onSessionComplete({
+            id,
+            task: task.trim(),
+            durationMinutes: minutes,
+            xp: sessionXP,
+            completedAt: new Date().toISOString(),
+          });
+        }
         return;
       }
-
-      setSecondsLeft(secondsLeft - 1);
-    }, 1000);
+    }, 250);
 
     return () => clearInterval(interval);
-  }, [minutes, onSessionComplete, running, secondsLeft, sessionXP, task]);
+  }, [minutes, onSessionComplete, running, sessionXP, task]);
 
   const changeDuration = (duration: number) => {
     setMinutes(duration);
-    setSecondsLeft(duration * 60);
+    setRemainingMs(duration * 60_000);
+    sessionIdRef.current = null;
+    setHasActiveSession(false);
   };
 
   const reset = () => {
     setRunning(false);
-    setSecondsLeft(minutes * 60);
+    deadlineRef.current = null;
+    sessionIdRef.current = null;
+    setHasActiveSession(false);
+    setRemainingMs(minutes * 60_000);
     sound.playClick();
   };
 
-  const displayMinutes = Math.floor(
-    secondsLeft / 60
-  )
+  const toggleRunning = () => {
+    if (running) {
+      const remaining = Math.max(0, (deadlineRef.current ?? Date.now()) - Date.now());
+      deadlineRef.current = null;
+      setRemainingMs(remaining);
+      setRunning(false);
+      sound.playClick();
+      return;
+    }
+
+    const remaining = remainingMs <= 0 ? minutes * 60_000 : remainingMs;
+    setRemainingMs(remaining);
+    if (!sessionIdRef.current) {
+      sessionIdRef.current = crypto.randomUUID();
+      setHasActiveSession(true);
+    }
+    deadlineRef.current = Date.now() + remaining;
+    setRunning(true);
+    sound.playFocusStart();
+  };
+
+  const secondsLeft = Math.ceil(remainingMs / 1000);
+  const displayMinutes = Math.floor(secondsLeft / 60)
     .toString()
     .padStart(2, "0");
 
@@ -54,10 +97,10 @@ export default function FocusPage({
     .toString()
     .padStart(2, "0");
 
-  const progress =
-    ((minutes * 60 - secondsLeft) /
-      (minutes * 60)) *
-    100;
+  const progress = Math.min(100, Math.max(
+    0,
+    ((minutes * 60_000 - remainingMs) / (minutes * 60_000)) * 100,
+  ));
 
   return (
     <section className="focus-page panel">
@@ -146,15 +189,7 @@ export default function FocusPage({
         <button
           className="focus-main-button"
           aria-pressed={running}
-          onClick={() => {
-            if (running) {
-              sound.playClick();
-              setRunning(false);
-            } else {
-              sound.playFocusStart();
-              setRunning(true);
-            }
-          }}
+          onClick={toggleRunning}
         >
           {running ? (
             <Pause size={17} />
@@ -162,7 +197,7 @@ export default function FocusPage({
             <Play size={17} />
           )}
 
-          {running ? "PAUSE" : "START FOCUS"}
+          {running ? "PAUSE" : hasActiveSession ? "RESUME FOCUS" : "START FOCUS"}
         </button>
 
         <button
@@ -180,6 +215,33 @@ export default function FocusPage({
           ? "FOCUS PROTOCOL ACTIVE"
           : "SYSTEM READY"}
       </div>
+
+      <section className="focus-history" aria-labelledby="focus-history-title">
+        <div className="focus-history-heading">
+          <span className="system-label">SESSION LOG</span>
+          <h3 id="focus-history-title">RECENT CLEARS</h3>
+        </div>
+        {sessions.length === 0 ? (
+          <p className="focus-history-empty">No completed focus sessions recorded yet.</p>
+        ) : (
+          <ol>
+            {[...sessions].reverse().slice(0, 5).map((session) => (
+              <li key={session.id}>
+                <span>{session.task || "FOCUS SESSION"}</span>
+                <time dateTime={session.completedAt}>
+                  {new Date(session.completedAt).toLocaleString([], {
+                    month: "short",
+                    day: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </time>
+                <strong>{session.durationMinutes} MIN · +{session.xp} XP</strong>
+              </li>
+            ))}
+          </ol>
+        )}
+      </section>
     </section>
   );
 }

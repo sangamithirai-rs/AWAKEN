@@ -5,8 +5,12 @@ class SoundSystem {
   private enabled: boolean = true;
 
   constructor() {
-    const saved = localStorage.getItem("awaken-sfx-enabled");
-    this.enabled = saved !== null ? saved === "true" : true;
+    try {
+      const saved = localStorage.getItem("awaken-sfx-enabled");
+      this.enabled = saved !== null ? saved === "true" : true;
+    } catch (error) {
+      console.error("Unable to read the sound preference.", error);
+    }
   }
 
   private initContext(): AudioContext | null {
@@ -30,14 +34,15 @@ class SoundSystem {
     return this.enabled;
   }
 
-  public setEnabled(val: boolean) {
+  public setEnabled(val: boolean): string | null {
     this.enabled = val;
-    localStorage.setItem("awaken-sfx-enabled", String(val));
-  }
-
-  public toggle(): boolean {
-    this.setEnabled(!this.enabled);
-    return this.enabled;
+    try {
+      localStorage.setItem("awaken-sfx-enabled", String(val));
+      return null;
+    } catch (error) {
+      console.error("Unable to save the sound preference.", error);
+      return "The sound preference could not be saved in this browser.";
+    }
   }
 
   // Cyber Click

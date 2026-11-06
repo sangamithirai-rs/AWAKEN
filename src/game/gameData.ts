@@ -1,7 +1,15 @@
 import { Brain, Code2, Crosshair, Target, Zap } from "lucide-react";
-import type { Attribute, CustomQuest, Quest } from "../types/game";
+import type {
+  Attribute,
+  Attributes,
+  CustomQuest,
+  Quest,
+  QuestCadence,
+  QuestKind,
+  QuestPriority,
+} from "../types/game";
 
-export const defaultAttributes = {
+export const defaultAttributes: Attributes = {
   strength: 1,
   intelligence: 1,
   discipline: 1,
@@ -18,6 +26,11 @@ export const dailyQuests: Quest[] = [
     xp: 100,
     icon: Zap,
     attribute: "strength",
+    cadence: "DAILY",
+    priority: "NORMAL",
+    kind: "STANDARD",
+    goalCount: 1,
+    currentCount: 0,
     type: "DAILY",
   },
   {
@@ -27,6 +40,11 @@ export const dailyQuests: Quest[] = [
     xp: 100,
     icon: Brain,
     attribute: "intelligence",
+    cadence: "DAILY",
+    priority: "NORMAL",
+    kind: "STANDARD",
+    goalCount: 1,
+    currentCount: 0,
     type: "DAILY",
   },
   {
@@ -36,6 +54,11 @@ export const dailyQuests: Quest[] = [
     xp: 50,
     icon: Target,
     attribute: "discipline",
+    cadence: "DAILY",
+    priority: "NORMAL",
+    kind: "STANDARD",
+    goalCount: 1,
+    currentCount: 0,
     type: "DAILY",
   },
 ];
@@ -45,6 +68,28 @@ export function getLocalDateKey(date = new Date()) {
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
+}
+
+export function getLocalWeekKey(date = new Date()) {
+  const monday = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  monday.setDate(monday.getDate() - ((monday.getDay() + 6) % 7));
+  return getLocalDateKey(monday);
+}
+
+export function addLocalDays(dateKey: string, days: number) {
+  const [year, month, day] = dateKey.split("-").map(Number);
+  const date = new Date(year, month - 1, day, 12);
+  date.setDate(date.getDate() + days);
+  return getLocalDateKey(date);
+}
+
+export function getQuestPeriodKey(questId: string, cadence: QuestCadence, date = new Date()) {
+  const period = cadence === "DAILY"
+    ? getLocalDateKey(date)
+    : cadence === "WEEKLY"
+      ? getLocalWeekKey(date)
+      : "once";
+  return JSON.stringify([questId, cadence, period]);
 }
 
 export function getQuestIcon(type?: string): Quest["icon"] {
@@ -98,6 +143,13 @@ export function combineQuests(customQuests: CustomQuest[]): Quest[] {
       xp: quest.xp,
       icon: getQuestIcon(quest.type),
       attribute: quest.attribute ?? getDefaultAttribute(quest.type),
+      cadence: quest.cadence ?? (quest.type === "DAILY" ? "DAILY" : "ONCE"),
+      priority: quest.priority ?? ("NORMAL" satisfies QuestPriority),
+      kind: (quest.kind ?? "STANDARD") satisfies QuestKind,
+      goalCount: quest.kind === "BOSS" ? Math.max(2, quest.goalCount ?? 2) : 1,
+      currentCount: quest.kind === "BOSS"
+        ? Math.min(Math.max(2, quest.goalCount ?? 2), quest.currentCount ?? 0)
+        : 0,
       type: quest.type,
       deletable: true,
     })),

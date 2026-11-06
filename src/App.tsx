@@ -3,7 +3,6 @@ import { AnimatePresence, motion, MotionConfig } from "framer-motion";
 import {
   Activity,
   Check,
-  RotateCcw,
   Sparkles,
   Target,
   X,
@@ -18,9 +17,10 @@ import AchievementsPage from "./components/AchievementsPage";
 import InventoryPage from "./components/InventoryPage";
 import CreateQuest from "./components/CreateQuest";
 import FocusPage from "./components/FocusPage";
+import AnalyticsPage from "./components/AnalyticsPage";
+import StreakCard from "./components/StreakCard";
 import { useAwakenGame } from "./hooks/useAwakenGame";
 import { getRank } from "./game/gameData";
-import { sound } from "./utils/soundEffects";
 
 const bootMessages = [
   "ESTABLISHING SYSTEM CONNECTION...",
@@ -37,10 +37,13 @@ function App() {
   const [activePage, setActivePage] = useState<Page>("SYSTEM");
   const game = useAwakenGame();
   const {
+    activityLog,
+    addCustomCategory,
     allQuests,
     attributes,
     completeFocusSession,
     completeQuest,
+    customCategories,
     completedQuestCount,
     completedQuests,
     createQuest,
@@ -51,10 +54,18 @@ function App() {
     notification,
     pendingQuests,
     questCompletions,
-    resetQuests,
+    recoverYesterday,
+    recoveryCredits,
+    canRecoverYesterday,
+    currentStreak,
+    longestStreak,
+    currentWeeklyStreak,
+    longestWeeklyStreak,
     setNotification,
-    setSoundEnabled,
+    showNotification,
     soundEnabled,
+    storageWarning,
+    toggleSound,
     xp,
     xpPercentage,
   } = game;
@@ -74,6 +85,10 @@ function App() {
       year: "numeric",
     })
   );
+
+  useEffect(() => {
+    if (storageWarning) showNotification(storageWarning);
+  }, [showNotification, storageWarning]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -313,11 +328,7 @@ function App() {
             level={level}
             rank={getRank(level)}
             soundEnabled={soundEnabled}
-            toggleSound={() => {
-              const enabled = sound.toggle();
-              setSoundEnabled(enabled);
-              if (enabled) sound.playClick();
-            }}
+            toggleSound={toggleSound}
             totalQuests={allQuests.length}
             totalXP={xp}
             time={systemTime}
@@ -366,7 +377,11 @@ function App() {
                   <div className="mission-console-body">
                     <div className="mission-contract">
                       <div className="mission-contract-label">
-                        {featuredQuest ? `ACTIVE CONTRACT // ${featuredQuest.type ?? "QUEST"}` : "NO ACTIVE CONTRACT"}
+                        {featuredQuest
+                          ? featuredQuest.kind === "BOSS"
+                            ? "ACTIVE CONTRACT // BOSS"
+                            : `ACTIVE CONTRACT // ${featuredQuest.type ?? "QUEST"}`
+                          : "NO ACTIVE CONTRACT"}
                       </div>
                       <h2>{featuredQuest?.title ?? "QUESTS REQUIRED"}</h2>
                       <p>
@@ -388,7 +403,11 @@ function App() {
                           }}
                         >
                           {featuredQuest ? <Check size={14} /> : <Target size={14} />}
-                          {featuredQuest ? "CLEAR CONTRACT" : "ACCESS QUEST BOARD"}
+                          {featuredQuest
+                            ? featuredQuest.kind === "BOSS"
+                              ? "ADVANCE BOSS OBJECTIVE"
+                              : "CLEAR CONTRACT"
+                            : "ACCESS QUEST BOARD"}
                         </button>
                       </div>
                     </div>
@@ -434,6 +453,16 @@ function App() {
                     </div>
                   </div>
                 </motion.section>
+
+                <StreakCard
+                  current={currentStreak}
+                  longest={longestStreak}
+                  weeklyCurrent={currentWeeklyStreak}
+                  weeklyLongest={longestWeeklyStreak}
+                  recoveryCredits={recoveryCredits}
+                  canRecoverYesterday={canRecoverYesterday}
+                  onRecoverYesterday={recoverYesterday}
+                />
 
                 {/* PLAYER STATUS */}
 
@@ -589,7 +618,6 @@ function App() {
                     }
 
                   }}
-                  onReset={resetQuests}
                   onDelete={deleteQuest}
                 />
 
@@ -717,16 +745,6 @@ function App() {
   </div>
 
   <div className="daily-header-right">
-    <button
-      className="quest-reset-btn"
-      onClick={resetQuests}
-      disabled={completedQuests.length === 0}
-      title="Reset quest completions"
-    >
-      <RotateCcw size={12} />
-      <span>RESET PROTOCOL</span>
-    </button>
-
     <div className="daily-progress">
       <strong>
         {completedQuestCount}
@@ -739,6 +757,8 @@ function App() {
 </div>
                 <CreateQuest
                   onCreate={createQuest}
+                  categories={customCategories}
+                  onAddCategory={addCustomCategory}
                 />
 
                 <QuestBoard
@@ -759,7 +779,6 @@ function App() {
                     }
 
                   }}
-                  onReset={resetQuests}
                   onDelete={deleteQuest}
                 />
 
@@ -768,6 +787,23 @@ function App() {
           )}
 
           {/* FOCUS */}
+
+          {activePage === "ANALYTICS" && (
+            <motion.div
+              key="analytics"
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -12 }}
+              transition={{ duration: 0.25 }}
+            >
+              <div className="main-grid">
+                <AnalyticsPage
+                  activityLog={activityLog}
+                  focusSessions={game.focusSessions}
+                />
+              </div>
+            </motion.div>
+          )}
 
           {/* SKILLS */}
 
@@ -793,6 +829,7 @@ function App() {
               <div className="main-grid">
                 <SkillsPage
                   level={level}
+                  skillXP={game.skillXP}
                 />
               </div>
             </motion.div>
@@ -867,7 +904,10 @@ function App() {
           className="main-grid focus-page-shell"
           hidden={activePage !== "FOCUS"}
         >
-          <FocusPage onSessionComplete={completeFocusSession} />
+          <FocusPage
+            onSessionComplete={completeFocusSession}
+            sessions={game.focusSessions}
+          />
         </div>
 
         {/* TERMINAL STATUS */}

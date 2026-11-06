@@ -1,22 +1,11 @@
 import { useMemo, useState } from "react";
-import type { ElementType } from "react";
-import { Check, Circle, RotateCcw, Trash2 } from "lucide-react";
-
-type Quest = {
-  id: string;
-  title: string;
-  description: string;
-  xp: number;
-  icon: ElementType;
-  type?: string;
-  deletable?: boolean;
-};
+import { Check, Circle, Plus, Trash2 } from "lucide-react";
+import type { Quest } from "../types/game";
 
 type QuestBoardProps = {
   quests: Quest[];
   completedQuests: string[];
   onComplete: (questId: string) => void;
-  onReset?: () => void;
   onDelete?: (questId: string) => void;
 };
 
@@ -24,7 +13,6 @@ export default function QuestBoard({
   quests,
   completedQuests,
   onComplete,
-  onReset,
   onDelete,
 }: QuestBoardProps) {
   const [filter, setFilter] = useState("ALL");
@@ -37,13 +25,14 @@ export default function QuestBoard({
   }, [quests]);
 
   const filteredQuests = useMemo(() => {
-    if (filter === "ALL") {
-      return quests;
-    }
-
-    return quests.filter(
-      (quest) => quest.type === filter
-    );
+    const categoryQuests = filter === "ALL"
+      ? quests
+      : quests.filter((quest) => quest.type === filter);
+    const priority = { HIGH: 0, NORMAL: 1, LOW: 2 };
+    return categoryQuests
+      .map((quest, index) => ({ quest, index }))
+      .sort((a, b) => priority[a.quest.priority] - priority[b.quest.priority] || a.index - b.index)
+      .map(({ quest }) => quest);
   }, [quests, filter]);
 
   const completedCount = filteredQuests.filter(
@@ -68,18 +57,6 @@ export default function QuestBoard({
         </div>
 
         <div className="quest-heading-right">
-          {onReset && (
-            <button
-              className="quest-reset-btn"
-              onClick={onReset}
-              disabled={completedCount === 0}
-              title="Reset quest completions"
-            >
-              <RotateCcw size={12} />
-              <span>RESET</span>
-            </button>
-          )}
-
           <span
             className="quest-count"
             aria-label={`${completedCount} of ${filteredQuests.length} quests complete`}
@@ -145,7 +122,11 @@ export default function QuestBoard({
                 <div className="quest-info">
                   <div className="quest-meta">
                     <span className="quest-type">
-                      {quest.type ?? "QUEST"}
+                      {quest.kind === "BOSS" ? "BOSS QUEST" : quest.type ?? "QUEST"}
+                    </span>
+                    <span className="quest-cadence">{quest.cadence}</span>
+                    <span className={`quest-priority priority-${quest.priority.toLowerCase()}`}>
+                      {quest.priority}
                     </span>
                   </div>
 
@@ -154,6 +135,24 @@ export default function QuestBoard({
                   <p>
                     {quest.description}
                   </p>
+                  {quest.kind === "BOSS" && (
+                    <div className="boss-progress">
+                      <div
+                        role="progressbar"
+                        aria-label={`${quest.title} objective progress`}
+                        aria-valuemin={0}
+                        aria-valuemax={quest.goalCount}
+                        aria-valuenow={quest.currentCount}
+                      >
+                        <span
+                          style={{
+                            width: `${Math.min(100, (quest.currentCount / quest.goalCount) * 100)}%`,
+                          }}
+                        />
+                      </div>
+                      <small>OBJECTIVES {quest.currentCount}/{quest.goalCount}</small>
+                    </div>
+                  )}
                 </div>
 
                 <div className="quest-reward">
@@ -171,13 +170,23 @@ export default function QuestBoard({
                     aria-label={
                       completed
                         ? "Quest completed"
-                        : `Complete ${quest.title} for ${quest.xp} XP`
+                        : quest.kind === "BOSS"
+                          ? `Advance ${quest.title} objective ${quest.currentCount + 1} of ${quest.goalCount}`
+                          : `Complete ${quest.title} for ${quest.xp} XP`
                     }
                     aria-pressed={completed}
-                    title={completed ? "Quest complete" : `Clear quest • +${quest.xp} XP`}
+                    title={
+                      completed
+                        ? "Quest complete"
+                        : quest.kind === "BOSS"
+                          ? `Advance objective ${quest.currentCount + 1} of ${quest.goalCount}`
+                          : `Clear quest • +${quest.xp} XP`
+                    }
                   >
                     {completed ? (
                       <Check size={16} />
+                    ) : quest.kind === "BOSS" ? (
+                      <Plus size={16} />
                     ) : (
                       <Circle size={14} />
                     )}
