@@ -1,101 +1,26 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { AnimatePresence, motion, MotionConfig } from "framer-motion";
 import {
   Activity,
-  Brain,
   Check,
-  Code2,
-  Crosshair,
   RotateCcw,
   Sparkles,
   Target,
   X,
-  Volume2,
-  VolumeX,
-  Zap,
 } from "lucide-react";
 
-import SystemNav, { type Page } from "./components/SystemNav";
+import type { Page } from "./components/SystemNav";
+import SystemHeader from "./components/SystemHeader";
+import SystemSidebar from "./components/SystemSidebar";
 import QuestBoard from "./components/QuestBoard";
 import SkillsPage from "./components/SkillsPage";
 import AchievementsPage from "./components/AchievementsPage";
 import InventoryPage from "./components/InventoryPage";
 import CreateQuest from "./components/CreateQuest";
 import FocusPage from "./components/FocusPage";
+import { useAwakenGame } from "./hooks/useAwakenGame";
+import { getRank } from "./game/gameData";
 import { sound } from "./utils/soundEffects";
-
-type Attributes = {
-  strength: number;
-  intelligence: number;
-  discipline: number;
-  focus: number;
-  consistency: number;
-};
-
-type Quest = {
-  id: string;
-  title: string;
-  description: string;
-  xp: number;
-  icon: typeof Target;
-  attribute: keyof Attributes;
-  type?: string;
-  deletable?: boolean;
-};
-
-type CustomQuest = {
-  id: string;
-  title: string;
-  description: string;
-  xp: number;
-  type: string;
-  attribute?: keyof Attributes;
-};
-
-const quests: Quest[] = [
-  {
-    id: "daily-movement",
-    title: "Hunter Conditioning",
-    description: "Move your body for 20 minutes. A walk, workout, or mobility session counts.",
-    xp: 100,
-    icon: Zap,
-    attribute: "strength",
-    type: "DAILY",
-  },
-  {
-    id: "daily-focus",
-    title: "Gate Study",
-    description: "Give one meaningful task 25 minutes of focused attention.",
-    xp: 100,
-    icon: Brain,
-    attribute: "intelligence",
-    type: "DAILY",
-  },
-  {
-    id: "daily-plan",
-    title: "System Check",
-    description: "Choose your top priority and define the next action.",
-    xp: 50,
-    icon: Target,
-    attribute: "discipline",
-    type: "DAILY",
-  },
-];
-
-function getLocalDateKey(date = new Date()) {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-}
-
-const defaultAttributes: Attributes = {
-  strength: 1,
-  intelligence: 1,
-  discipline: 1,
-  focus: 1,
-  consistency: 1,
-};
 
 const bootMessages = [
   "ESTABLISHING SYSTEM CONNECTION...",
@@ -109,88 +34,30 @@ const bootMessages = [
 function App() {
   const [booting, setBooting] = useState(true);
   const [bootMessage, setBootMessage] = useState(bootMessages[0]);
-
   const [activePage, setActivePage] = useState<Page>("SYSTEM");
-
- const [completedQuests, setCompletedQuests] = useState<string[]>(() => {
-  const saved = localStorage.getItem("awaken-completed-quests");
-  const savedDate = localStorage.getItem("awaken-completion-date");
-
-  const today = getLocalDateKey();
-
-  if (savedDate !== today) {
-    localStorage.setItem("awaken-completion-date", today);
-
-    // Reset built-in daily quests.
-    // Custom quests remain completed.
-    const customSaved = localStorage.getItem(
-      "awaken-custom-quests"
-    );
-
-    const customQuestIds: string[] = customSaved
-      ? JSON.parse(customSaved).map(
-          (quest: CustomQuest) => quest.id
-        )
-      : [];
-
-    const previousCompleted: string[] = saved
-      ? JSON.parse(saved)
-      : [];
-
-    const remainingCompleted =
-      previousCompleted.filter((id) =>
-        customQuestIds.includes(id)
-      );
-
-    localStorage.setItem(
-      "awaken-completed-quests",
-      JSON.stringify(remainingCompleted)
-    );
-
-    return remainingCompleted;
-  }
-
-  return saved ? JSON.parse(saved) : [];
-});
-
-  const [customQuests, setCustomQuests] = useState<CustomQuest[]>(() => {
-    const saved = localStorage.getItem("awaken-custom-quests");
-    return saved ? JSON.parse(saved) : [];
-  });
-
-  const [xp, setXp] = useState<number>(() => {
-    return Number(localStorage.getItem("awaken-xp")) || 0;
-  });
-
-  const [attributes, setAttributes] = useState<Attributes>(() => {
-    const saved = localStorage.getItem("awaken-attributes");
-    return saved ? JSON.parse(saved) : defaultAttributes;
-  });
-  const [questCompletions, setQuestCompletions] = useState<number>(() => {
-    const saved = localStorage.getItem("awaken-quest-completions");
-    const previousCompletions = localStorage.getItem("awaken-completed-quests");
-    const previousCount = previousCompletions
-      ? (JSON.parse(previousCompletions) as string[]).length
-      : 0;
-    return Math.max(Number(saved) || 0, previousCount);
-  });
-
-  const [notification, setNotification] = useState<string | null>(null);
-  const [levelUp, setLevelUp] = useState(false);
-  const [soundEnabled, setSoundEnabled] = useState(() => sound.isEnabled());
-  const notificationTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const showNotification = useCallback((message: string) => {
-    if (notificationTimeout.current) {
-      clearTimeout(notificationTimeout.current);
-    }
-
-    setNotification(message);
-    notificationTimeout.current = setTimeout(() => {
-      setNotification(null);
-      notificationTimeout.current = null;
-    }, 3000);
-  }, []);
+  const game = useAwakenGame();
+  const {
+    allQuests,
+    attributes,
+    completeFocusSession,
+    completeQuest,
+    completedQuestCount,
+    completedQuests,
+    createQuest,
+    currentLevelXP,
+    deleteQuest,
+    level,
+    levelUp,
+    notification,
+    pendingQuests,
+    questCompletions,
+    resetQuests,
+    setNotification,
+    setSoundEnabled,
+    soundEnabled,
+    xp,
+    xpPercentage,
+  } = game;
 
   const [systemTime, setSystemTime] = useState(
     new Date().toLocaleTimeString([], {
@@ -207,14 +74,6 @@ function App() {
       year: "numeric",
     })
   );
-
-  const level = Math.floor(xp / 1000) + 1;
-  const currentLevelXP = xp % 1000;
-  const xpPercentage = (currentLevelXP / 1000) * 100;
-
-  /* --------------------------------
-     SYSTEM CLOCK
-  -------------------------------- */
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -239,23 +98,6 @@ function App() {
 
     return () => clearInterval(interval);
   }, []);
-
-  useEffect(() => {
-    const checkForNewDay = () => {
-      const today = getLocalDateKey();
-      if (localStorage.getItem("awaken-completion-date") === today) return;
-
-      const customQuestIds = new Set(customQuests.map((quest) => quest.id));
-      setCompletedQuests((current) =>
-        current.filter((id) => customQuestIds.has(id))
-      );
-      localStorage.setItem("awaken-completion-date", today);
-      showNotification("NEW DAY // DAILY QUESTS REFRESHED");
-    };
-
-    const interval = setInterval(checkForNewDay, 30_000);
-    return () => clearInterval(interval);
-  }, [customQuests, showNotification]);
 
   /* --------------------------------
      SYSTEM BOOT
@@ -285,219 +127,6 @@ function App() {
     };
   }, []);
 
-  /* --------------------------------
-     LOCAL STORAGE
-  -------------------------------- */
-
-  useEffect(() => {
-    localStorage.setItem(
-      "awaken-completed-quests",
-      JSON.stringify(completedQuests)
-    );
-  }, [completedQuests]);
-
-  useEffect(() => {
-    localStorage.setItem(
-      "awaken-custom-quests",
-      JSON.stringify(customQuests)
-    );
-  }, [customQuests]);
-
-  useEffect(() => {
-    localStorage.setItem("awaken-xp", String(xp));
-  }, [xp]);
-
-  useEffect(() => {
-    localStorage.setItem(
-      "awaken-attributes",
-      JSON.stringify(attributes)
-    );
-  }, [attributes]);
-
-  useEffect(() => {
-    localStorage.setItem("awaken-quest-completions", String(questCompletions));
-  }, [questCompletions]);
-
-  useEffect(() => () => {
-    if (notificationTimeout.current) {
-      clearTimeout(notificationTimeout.current);
-    }
-  }, []);
-
-  /* --------------------------------
-     COMPLETE QUEST
-  -------------------------------- */
-
-  function completeQuest(quest: Quest) {
-    if (completedQuests.includes(quest.id)) {
-      return;
-    }
-
-    const previousLevel = Math.floor(xp / 1000) + 1;
-
-    const newXP = xp + quest.xp;
-
-    const newLevel = Math.floor(newXP / 1000) + 1;
-
-    setCompletedQuests((prev) => [
-      ...prev,
-      quest.id,
-    ]);
-
-    setQuestCompletions((current) => current + 1);
-    setXp(newXP);
-    sound.playQuestComplete();
-
-    setAttributes((prev) => ({
-      ...prev,
-      [quest.attribute]: prev[quest.attribute] + 1,
-    }));
-    sound.playStatPoint();
-
-    if (newLevel > previousLevel) {
-      setLevelUp(true);
-      sound.playLevelUp();
-
-      setTimeout(() => {
-        setLevelUp(false);
-      }, 4500);
-
-      return;
-    }
-
-    showNotification(`QUEST COMPLETE  //  +${quest.xp} XP`);
-  }
-
-  /* --------------------------------
-     RESET QUESTS
-  -------------------------------- */
-
-  const resetQuests = () => {
-    setCompletedQuests([]);
-    showNotification("QUEST PROTOCOL RESET // ALL QUESTS ACTIVE");
-  };
-
-  /* --------------------------------
-     DELETE QUEST
-  -------------------------------- */
-
-  const deleteQuest = (questId: string) => {
-    setCustomQuests((current) =>
-      current.filter((quest) => quest.id !== questId)
-    );
-    setCompletedQuests((current) =>
-      current.filter((id) => id !== questId)
-    );
-    sound.playDelete();
-    showNotification("QUEST REMOVED FROM DATABASE");
-  };
-
-  /* --------------------------------
-     CREATE CUSTOM QUEST
-  -------------------------------- */
-
-  const createCustomQuest = (quest: {
-    title: string;
-    description: string;
-    xp: number;
-    type: string;
-    attribute?: keyof Attributes;
-  }) => {
-    const newQuest: CustomQuest = {
-      id: `custom-${Date.now()}`,
-      ...quest,
-    };
-
-    setCustomQuests((current) => [
-      ...current,
-      newQuest,
-    ]);
-
-    sound.playClick();
-    showNotification(`QUEST CREATED  //  ${quest.title.toUpperCase()}`);
-  };
-
-  const completeFocusSession = useCallback((sessionXP: number, task?: string) => {
-    const previousLevel = Math.floor(xp / 1000) + 1;
-    const newLevel = Math.floor((xp + sessionXP) / 1000) + 1;
-    setXp((current) => current + sessionXP);
-    sound.playQuestComplete();
-
-    if (newLevel > previousLevel) {
-      setLevelUp(true);
-      sound.playLevelUp();
-      setTimeout(() => setLevelUp(false), 4500);
-    }
-
-    showNotification(
-      `${task ? `${task.toUpperCase()} // ` : ""}FOCUS SESSION COMPLETE // +${sessionXP} XP`
-    );
-  }, [showNotification, xp]);
-
-  /* --------------------------------
-     COMBINE BUILT-IN + CUSTOM QUESTS
-  -------------------------------- */
-
-  function getQuestIcon(type?: string): typeof Target {
-    switch (type) {
-      case "FITNESS":
-        return Zap;
-      case "STUDY":
-        return Brain;
-      case "CODING":
-        return Code2;
-      case "PROJECT":
-        return Crosshair;
-      default:
-        return Target;
-    }
-  }
-
-  function getDefaultAttribute(type?: string): keyof Attributes {
-    switch (type) {
-      case "FITNESS":
-        return "strength";
-      case "STUDY":
-      case "CODING":
-        return "intelligence";
-      case "DAILY":
-        return "discipline";
-      case "PROJECT":
-        return "focus";
-      default:
-        return "consistency";
-    }
-  }
-
-  function getRank(lvl: number): string {
-    if (lvl >= 50) return "S";
-    if (lvl >= 30) return "A";
-    if (lvl >= 20) return "B";
-    if (lvl >= 15) return "C";
-    if (lvl >= 10) return "D";
-    if (lvl >= 5) return "E+";
-    return "E";
-  }
-
-  const allQuests: Quest[] = [
-    ...quests,
-    ...customQuests.map((quest) => ({
-      id: quest.id,
-      title: quest.title,
-      description: quest.description,
-      xp: quest.xp,
-      icon: getQuestIcon(quest.type),
-      attribute: quest.attribute ?? getDefaultAttribute(quest.type),
-      type: quest.type,
-      deletable: true,
-    })),
-  ];
-  const completedQuestCount = allQuests.filter((quest) =>
-    completedQuests.includes(quest.id)
-  ).length;
-  const pendingQuests = allQuests.filter(
-    (quest) => !completedQuests.includes(quest.id)
-  );
   const featuredQuest = pendingQuests[0];
   const questClearance = allQuests.length
     ? Math.round((completedQuestCount / allQuests.length) * 100)
@@ -669,76 +298,32 @@ function App() {
       </AnimatePresence>
 
       <main className="system-container">
+        <SystemSidebar
+          activePage={activePage}
+          level={level}
+          rank={getRank(level)}
+          setActivePage={setActivePage}
+        />
 
-        {/* SYSTEM HEADER */}
+        <div className="system-main">
+          <SystemHeader
+            activePage={activePage}
+            completed={completedQuestCount}
+            date={systemDate}
+            level={level}
+            rank={getRank(level)}
+            soundEnabled={soundEnabled}
+            toggleSound={() => {
+              const enabled = sound.toggle();
+              setSoundEnabled(enabled);
+              if (enabled) sound.playClick();
+            }}
+            totalQuests={allQuests.length}
+            totalXP={xp}
+            time={systemTime}
+          />
 
-        <header className="system-header">
-          <div className="header-brand">
-            <div className="system-status">
-              <span />
-              SYSTEM ONLINE
-
-              <strong>
-                {systemDate} // {systemTime}
-              </strong>
-            </div>
-
-            <h1>AWAKEN</h1>
-            <div className="system-subtitle">SHADOW MONARCH INTERFACE</div>
-          </div>
-
-          <div className="header-metrics" aria-label="Player summary stats">
-            <div className="metric-card">
-              <span>RANK</span>
-              <strong>{getRank(level)}</strong>
-            </div>
-
-            <div className="metric-card">
-              <span>QUESTS</span>
-              <strong>
-                {completedQuestCount}/{allQuests.length}
-              </strong>
-            </div>
-
-            <div className="metric-card">
-              <span>TOTAL XP</span>
-              <strong>{xp.toLocaleString()}</strong>
-            </div>
-          </div>
-
-          <div className="player-mini">
-
-            <div>
-              <span>PLAYER</span>
-              <strong>SAM</strong>
-            </div>
-
-            <div className="player-orb">
-              <Sparkles size={18} />
-            </div>
-
-          </div>
-
-          <div className="header-actions">
-            <button
-              className="sound-toggle"
-              type="button"
-              aria-label={soundEnabled ? "Mute system sounds" : "Enable system sounds"}
-              aria-pressed={soundEnabled}
-              title={soundEnabled ? "Mute system sounds" : "Enable system sounds"}
-              onClick={() => {
-                const enabled = sound.toggle();
-                setSoundEnabled(enabled);
-                if (enabled) sound.playClick();
-              }}
-            >
-              {soundEnabled ? <Volume2 size={16} /> : <VolumeX size={16} />}
-              <span>SFX</span>
-            </button>
-          </div>
-        </header>
-
-        {/* PAGE CONTENT */}
+        <div className="system-content">
 
         <AnimatePresence mode="wait">
 
@@ -1153,7 +738,7 @@ function App() {
   </div>
 </div>
                 <CreateQuest
-                  onCreate={createCustomQuest}
+                  onCreate={createQuest}
                 />
 
                 <QuestBoard
@@ -1285,13 +870,6 @@ function App() {
           <FocusPage onSessionComplete={completeFocusSession} />
         </div>
 
-        {/* NAVIGATION */}
-
-        <SystemNav
-          activePage={activePage}
-          setActivePage={setActivePage}
-        />
-
         {/* TERMINAL STATUS */}
 
         <div className="system-terminal">
@@ -1318,7 +896,8 @@ function App() {
           AWAKEN SYSTEM // PLAYER DEVELOPMENT
           PROTOCOL
         </footer>
-
+        </div>
+        </div>
       </main>
     </div>
     </MotionConfig>
