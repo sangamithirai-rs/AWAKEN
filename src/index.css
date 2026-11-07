@@ -2139,6 +2139,7 @@ body,
 
 .awaken {
   width: 100%;
+  height: 100vh;
   height: 100dvh;
   min-height: 0;
   overflow: hidden;
@@ -2604,6 +2605,7 @@ body,
 }
 
 .page-grid-quests .quest-card {
+  flex: 0 0 auto;
   min-height: 0;
   padding: 9px;
 }
@@ -8113,7 +8115,9 @@ button:disabled {
 
 @media (max-width: 420px) {
   .system-container {
-    padding-inline: 12px;
+    padding-inline:
+      max(12px, env(safe-area-inset-left))
+      max(12px, env(safe-area-inset-right));
   }
 
   .system-status {
@@ -8461,7 +8465,11 @@ button:disabled {
 @media (max-width: 760px) {
   .system-container {
     display: block;
-    padding: 14px 14px calc(94px + env(safe-area-inset-bottom));
+    padding:
+      max(14px, env(safe-area-inset-top))
+      max(14px, env(safe-area-inset-right))
+      calc(94px + env(safe-area-inset-bottom))
+      max(14px, env(safe-area-inset-left));
   }
 
   .system-sidebar {
@@ -8870,6 +8878,7 @@ button:disabled {
   height: 100%;
   flex: 1 1 auto;
   min-height: 0;
+  overflow-x: clip;
   grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.35fr) minmax(0, 0.9fr);
   grid-template-rows: minmax(0, 0.8fr) minmax(0, 1.2fr);
   gap: 10px;
@@ -9646,5 +9655,588 @@ button:disabled {
 @media (max-height: 820px), (max-width: 760px) {
   .system-content-system > footer {
     display: none;
+  }
+}
+
+@media (max-height: 500px) {
+  .system-container {
+    display: block;
+    padding:
+      max(6px, env(safe-area-inset-top))
+      max(10px, env(safe-area-inset-right))
+      calc(58px + env(safe-area-inset-bottom))
+      max(10px, env(safe-area-inset-left));
+  }
+
+  .system-sidebar {
+    position: fixed;
+    z-index: 80;
+    inset: auto 0 0;
+    width: auto;
+    height: auto;
+    max-height: calc(58px + env(safe-area-inset-bottom));
+    padding: 3px 6px calc(3px + env(safe-area-inset-bottom));
+    overflow: hidden;
+  }
+
+  .system-sidebar .system-nav {
+    display: grid;
+    grid-template-columns: repeat(8, minmax(0, 1fr));
+    gap: 2px;
+    margin: 0;
+  }
+
+  .system-sidebar .system-nav button {
+    min-width: 0;
+    min-height: 46px;
+    gap: 3px;
+    padding: 3px 1px;
+    font-size: 6px;
+    letter-spacing: 0;
+  }
+
+  .system-sidebar .system-nav button svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  .system-main {
+    height: 100%;
+  }
+
+  .system-main > .system-header {
+    display: flex;
+    min-height: 46px;
+    margin: 0 0 5px;
+    padding: 5px 8px;
+  }
+
+  .system-dashboard > .mission-console .mission-contract {
+    min-width: 0;
+    overflow-x: clip;
+  }
+
+  .system-dashboard > .mission-console .mission-contract-footer {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 4px;
+    width: 100%;
+  }
+
+  .system-dashboard > .mission-console .mission-open-button {
+    max-width: 100%;
+    min-width: 0;
+    min-height: 30px;
+    gap: 4px;
+    padding-inline: 7px;
+    font-size: 7px;
+    letter-spacing: 0.05em;
+    white-space: normal;
+  }
+
+  .system-main .system-header h1 {
+    margin-top: 3px;
+    font-size: 13px;
+  }
+
+  .system-main .header-context .system-status strong,
+  .system-main .header-metrics,
+  .system-main .system-terminal,
+  .system-main > footer {
+    display: none;
+  }
+
+  .system-content > div:not(.focus-page-shell) > .page-grid,
+  .system-content > .focus-page-shell {
+    height: 100%;
+  }
+
+  .page-grid-focus > .focus-page {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-rows: 30px 37px 23px 30px 9px;
+    align-content: space-between;
+    gap: 3px 8px;
+    padding: 8px;
+    overflow: hidden;
+  }
+
+  .page-grid-focus .focus-header {
+    grid-column: 1 / -1;
+    grid-row: 1;
+    align-items: center;
+  }
+
+  .page-grid-focus .focus-header h2 {
+    margin: 2px 0;
+    font-size: 12px;
+    line-height: 1;
+  }
+
+  .page-grid-focus .focus-header p {
+    display: none;
+    margin: 0;
+    font-size: 7px;
+  }
+
+  .page-grid-focus .focus-header > button {
+    min-height: 26px;
+    flex: 0 0 auto;
+    font-size: 7px;
+  }
+
+  .page-grid-focus .focus-task {
+    grid-column: 1;
+    grid-row: 2;
+    margin: 0;
+  }
+
+  .page-grid-focus .focus-task input {
+    height: 25px;
+    min-height: 25px;
+    padding-block: 3px;
+  }
+
+  .page-grid-focus .focus-task label {
+    margin-bottom: 2px;
+    font-size: 6px;
+    line-height: 8px;
+  }
+
+  .page-grid-focus .focus-duration {
+    grid-column: 1;
+    grid-row: 3;
+    gap: 3px;
+    margin: 0;
+  }
+
+  .page-grid-focus .focus-duration button {
+    min-height: 23px;
+    padding-inline: 5px;
+    font-size: 7px;
+  }
+
+  .page-grid-focus .focus-timer {
+    grid-column: 2;
+    grid-row: 2 / 5;
+    align-self: center;
+  }
+
+  .page-grid-focus .focus-timer .focus-progress {
+    width: clamp(94px, 27vh, 110px);
+    height: clamp(94px, 27vh, 110px);
+  }
+
+  .page-grid-focus .focus-controls {
+    grid-column: 1;
+    grid-row: 4;
+    flex-direction: row;
+    gap: 5px;
+  }
+
+  .page-grid-focus .focus-main-button,
+  .page-grid-focus .focus-reset {
+    width: auto;
+    min-height: 30px;
+    padding-inline: 7px;
+  }
+
+  .page-grid-focus .focus-status {
+    grid-column: 1 / -1;
+    grid-row: 5;
+    margin: 0;
+    font-size: 7px;
+  }
+
+  .page-grid-analytics > .analytics-page {
+    display: grid;
+    grid-template-columns: minmax(190px, 0.65fr) minmax(0, 1.35fr);
+    grid-template-rows: auto auto auto auto minmax(0, 1fr);
+    gap: 3px;
+    padding: 6px;
+  }
+
+  .page-grid-analytics .quest-heading {
+    grid-column: 1 / -1;
+    grid-row: 1;
+    align-items: center;
+    gap: 4px;
+    margin: 0;
+    padding: 0;
+  }
+
+  .page-grid-analytics .quest-heading h2 {
+    margin-top: 3px;
+    font-size: 12px;
+  }
+
+  .page-grid-analytics .quest-heading > span {
+    font-size: 6px;
+  }
+
+  .page-grid-analytics .analytics-period-tabs {
+    grid-column: 1;
+    grid-row: 2;
+    gap: 3px;
+  }
+
+  .page-grid-analytics .analytics-period-tabs button {
+    min-height: 23px;
+    padding-inline: 8px;
+    font-size: 7px;
+  }
+
+  .page-grid-analytics .analytics-metrics {
+    grid-column: 1;
+    grid-row: 3;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 4px;
+  }
+
+  .page-grid-analytics .analytics-metric {
+    min-width: 0;
+    min-height: 0;
+    height: 31px;
+    gap: 1px;
+    padding: 3px 5px;
+  }
+
+  .page-grid-analytics .analytics-metric > span {
+    overflow: hidden;
+    font-size: 6px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .page-grid-analytics .analytics-metric strong {
+    font-size: 12px;
+  }
+
+  .page-grid-analytics .analytics-metric small {
+    overflow: hidden;
+    font-size: 5px;
+    line-height: 1;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .page-grid-analytics .analytics-data-notice {
+    grid-column: 1;
+    grid-row: 4;
+    min-height: 0;
+    padding: 3px 5px;
+  }
+
+  .page-grid-analytics .analytics-data-notice > strong {
+    font-size: 6px;
+  }
+
+  .page-grid-analytics .analytics-data-notice p {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 1;
+    margin-top: 1px;
+    font-size: 5px;
+    line-height: 1.15;
+  }
+
+  .page-grid-analytics .analytics-chart {
+    grid-column: 2;
+    grid-row: 2 / 6;
+    min-height: 0;
+    padding: 4px 6px;
+  }
+
+  .page-grid-analytics .analytics-chart-heading {
+    gap: 4px;
+  }
+
+  .page-grid-analytics .analytics-chart-heading h3 {
+    margin: 2px 0 0;
+    font-size: 9px;
+  }
+
+  .page-grid-analytics .analytics-chart-heading > span,
+  .page-grid-analytics .analytics-day > small,
+  .page-grid-analytics .analytics-note {
+    display: none;
+  }
+
+  .page-grid-analytics .analytics-bars {
+    min-height: 0;
+    height: auto;
+  }
+}
+
+@media (max-width: 900px) {
+  .page-grid-quests {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto auto minmax(0, 1fr);
+  }
+
+  .page-grid-quests > :first-child.daily-system-header {
+    grid-row: 1;
+    max-height: none;
+    overflow: visible;
+  }
+
+  .page-grid-quests > .create-quest-button {
+    grid-row: 2;
+    align-self: start;
+    height: 40px;
+    margin: 0;
+    padding: 8px;
+  }
+
+  .page-grid-quests > .create-quest {
+    grid-row: 2;
+    height: 112px;
+    max-height: 112px;
+    min-height: 0;
+    margin: 0;
+    overflow-y: auto;
+  }
+
+  .page-grid-quests > .quests {
+    grid-column: 1;
+    grid-row: 3;
+  }
+}
+
+@media (min-width: 901px) {
+  .page-grid-quests > .create-quest-button {
+    align-self: start;
+    min-height: 40px;
+    margin: 0;
+  }
+}
+
+@media (max-height: 500px) and (max-width: 900px) {
+  .page-grid-quests {
+    grid-template-columns: minmax(0, 1fr) 140px;
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+
+  .page-grid-quests > .daily-system-header {
+    grid-column: 1;
+    grid-row: 1;
+    flex-wrap: nowrap;
+    gap: 8px;
+    padding: 6px 8px;
+  }
+
+  .page-grid-quests > .daily-system-header > div,
+  .page-grid-quests > .daily-system-header .daily-header-right {
+    min-width: 0;
+    width: auto;
+  }
+
+  .page-grid-quests > .daily-system-header h2 {
+    margin-top: 2px;
+    font-size: 11px;
+    letter-spacing: 1px;
+  }
+
+  .page-grid-quests > .daily-system-header .daily-header-right {
+    gap: 8px;
+  }
+
+  .page-grid-quests > .daily-system-header .daily-progress strong {
+    font-size: 14px;
+  }
+
+  .page-grid-quests > .create-quest-button {
+    grid-column: 2;
+    grid-row: 1;
+    width: 140px;
+    min-width: 0;
+  }
+
+  .page-grid-quests > .create-quest {
+    grid-column: 1 / -1;
+    grid-row: 1;
+    width: auto;
+    height: 112px;
+    max-height: 112px;
+    z-index: 1;
+  }
+
+  .page-grid-quests > .quests {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .page-grid-quests > .quests .quest-list {
+    flex: 0 0 auto;
+    overflow: visible;
+  }
+}
+
+/* Keep every section reachable when its content exceeds the viewport. */
+.system-main .system-content {
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+
+.system-content > div:not(.focus-page-shell) {
+  height: auto;
+  min-height: 100%;
+  flex: 0 0 auto;
+  overflow: visible;
+}
+
+.system-content > div:not(.focus-page-shell) > .page-grid,
+.system-content > .focus-page-shell {
+  height: auto;
+  min-height: 100%;
+  overflow: visible;
+}
+
+.system-content-system {
+  overflow-x: hidden;
+  overflow-y: auto !important;
+}
+
+.system-content-system > div {
+  height: auto;
+  min-height: 100%;
+  flex: 0 0 auto;
+}
+
+.system-content-system .system-dashboard {
+  height: auto;
+  min-height: 100%;
+  grid-template-rows: minmax(220px, auto) minmax(240px, auto);
+  overflow: visible;
+}
+
+.page-grid {
+  height: auto;
+  min-height: 100%;
+  overflow: visible;
+}
+
+.page-grid > .panel,
+.page-grid > .character-page,
+.page-grid > .quests,
+.page-grid > .analytics-page,
+.page-grid > .skills-page,
+.page-grid > .achievements-page,
+.page-grid > .inventory-page,
+.page-grid > .focus-page {
+  height: auto;
+  max-height: none;
+  overflow: visible;
+}
+
+.page-grid-quests .quest-card {
+  flex: 0 0 auto;
+}
+
+.page-grid-quests .quest-info > p {
+  display: block;
+  overflow: visible;
+}
+
+.page-grid-skills .skill-trees-grid {
+  flex: 0 0 auto;
+  overflow-x: auto;
+  overflow-y: visible;
+}
+
+.page-grid-skills .skill-tree {
+  height: auto;
+}
+
+.page-grid-skills .skill-tree-nodes {
+  overflow-y: visible;
+}
+
+.page-grid-achievements .achievements-grid {
+  flex: 0 0 auto;
+  overflow: visible;
+}
+
+.page-grid-achievements .achievement-card {
+  overflow: visible;
+}
+
+.page-grid-achievements .achievement-card p {
+  display: block;
+  overflow: visible;
+}
+
+.page-grid-inventory .inventory-loadout-layout {
+  flex: 0 0 auto;
+  overflow: visible;
+}
+
+.page-grid-inventory .inventory-loadout-layout .equipment-loadout,
+.page-grid-inventory .inventory-loadout-layout .owned-inventory {
+  overflow: visible;
+}
+
+.page-grid-analytics .analytics-chart {
+  min-height: 320px;
+  flex: 0 0 auto;
+  overflow: visible;
+}
+
+.page-grid-focus .focus-page {
+  grid-template-rows: auto auto auto auto auto auto;
+}
+
+@media (max-width: 1100px) {
+  .system-content-system .system-dashboard {
+    grid-template-rows: minmax(220px, auto) minmax(220px, auto) minmax(220px, auto);
+  }
+}
+
+@media (max-width: 900px) {
+  .page-grid-quests {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto auto auto;
+  }
+
+  .page-grid-quests > .daily-system-header {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .page-grid-quests > .create-quest-button,
+  .page-grid-quests > .create-quest {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  .page-grid-quests > .quests {
+    grid-column: 1;
+    grid-row: 3;
+    max-height: none;
+    overflow: visible;
+  }
+
+  .page-grid-quests > .quests .quest-list {
+    flex: 0 0 auto;
+    overflow: visible;
+  }
+
+  .page-grid-inventory .inventory-loadout-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 760px) {
+  .system-content-system .system-dashboard {
+    grid-template-rows: minmax(220px, auto) minmax(190px, auto) minmax(190px, auto);
+  }
+
+  .page-grid-skills .skill-trees-grid {
+    grid-template-columns: repeat(5, minmax(230px, 1fr));
   }
 }

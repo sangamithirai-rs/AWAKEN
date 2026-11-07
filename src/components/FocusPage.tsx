@@ -26,7 +26,7 @@ export default function FocusPage({
   useEffect(() => {
     if (!running) return;
 
-    const interval = setInterval(() => {
+    const updateRemaining = () => {
       const remaining = Math.max(0, (deadlineRef.current ?? Date.now()) - Date.now());
       setRemainingMs(remaining);
 
@@ -47,9 +47,16 @@ export default function FocusPage({
         }
         return;
       }
-    }, 250);
+    };
 
-    return () => clearInterval(interval);
+    const interval = setInterval(updateRemaining, 250);
+    document.addEventListener("visibilitychange", updateRemaining);
+    window.addEventListener("pageshow", updateRemaining);
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener("visibilitychange", updateRemaining);
+      window.removeEventListener("pageshow", updateRemaining);
+    };
   }, [minutes, onSessionComplete, running, sessionXP, task]);
 
   const changeDuration = (duration: number) => {

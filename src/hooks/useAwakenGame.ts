@@ -90,7 +90,13 @@ export function useAwakenGame() {
     };
 
     const interval = setInterval(checkForNewDay, 30_000);
-    return () => clearInterval(interval);
+    document.addEventListener("visibilitychange", checkForNewDay);
+    window.addEventListener("pageshow", checkForNewDay);
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener("visibilitychange", checkForNewDay);
+      window.removeEventListener("pageshow", checkForNewDay);
+    };
   }, [currentDateKey, showNotification]);
 
   useEffect(() => () => {

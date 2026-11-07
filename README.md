@@ -35,6 +35,12 @@ npm test
 
 The interface is contained within the browser viewport, with desktop side navigation and a compact mobile navigation bar. Detail-heavy screens use tabs and contextual panels; scrolling is limited to content lists and charts inside their own panels. Reduced-motion preferences are respected.
 
+## Cross-platform direction
+
+The React UI and `src/game/` domain logic remain shared across web and future Capacitor shells. Vite emits relative asset URLs for packaged WebViews, and the viewport uses mobile safe-area insets. Focus deadlines and recurring quest periods are rechecked when the WebView becomes visible again.
+
+The current save provider is synchronous browser `localStorage`; it works offline in browsers and WebViews, but it is not a native-backed or cross-device save system. Before production mobile release, move the save boundary to an asynchronous repository, keep browser storage as its web adapter, and add a native adapter only after choosing a Capacitor storage plugin. Keep save migrations in `src/game/storage.ts` and cloud synchronization as a separate layer. Supabase is a plausible later option for authentication and remote backup/sync, but requires account, conflict-resolution, privacy, and offline-merge decisions before adoption.
+
 Character name, class, specialization, attributes, and progression are stored locally. Strength, intelligence, vitality, discipline, creativity, focus, and consistency increase only through quests targeting those attributes. Hunter titles are derived from recorded quest and level milestones.
 
 Quest rewards are recorded by cadence period: daily quests refresh on the local calendar day, weekly quests on Monday, and one-time quests remain claimed. Focus sessions are rewarded once per session ID and the most recent 500 completions are retained locally.
