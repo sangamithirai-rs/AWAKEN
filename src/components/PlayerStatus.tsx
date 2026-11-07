@@ -1,13 +1,6 @@
-import { Brain, Flame, Shield, Target, Zap } from "lucide-react";
+import { Brain, Flame, Heart, Lightbulb, Shield, Target, Zap } from "lucide-react";
 import { motion } from "framer-motion";
-
-type Attributes = {
-  strength: number;
-  intelligence: number;
-  discipline: number;
-  focus: number;
-  consistency: number;
-};
+import type { Attributes } from "../types/game";
 
 type PlayerStatusProps = {
   level: number;
@@ -36,9 +29,19 @@ export default function PlayerStatus({
       icon: Brain,
     },
     {
+      label: "VITALITY",
+      value: attributes.vitality,
+      icon: Heart,
+    },
+    {
       label: "DISCIPLINE",
       value: attributes.discipline,
       icon: Shield,
+    },
+    {
+      label: "CREATIVITY",
+      value: attributes.creativity,
+      icon: Lightbulb,
     },
     {
       label: "FOCUS",

@@ -5,6 +5,7 @@ type SystemSidebarProps = {
   activePage: Page;
   level: number;
   rank: string;
+  hunterName: string;
   setActivePage: (page: Page) => void;
 };
 
@@ -12,6 +13,7 @@ export default function SystemSidebar({
   activePage,
   level,
   rank,
+  hunterName,
   setActivePage,
 }: SystemSidebarProps) {
   return (
@@ -36,7 +38,7 @@ export default function SystemSidebar({
 
       <div className="sidebar-hunter-card">
         <span className="sidebar-player-label">ACTIVE HUNTER</span>
-        <strong>SAM</strong>
+        <strong>{hunterName}</strong>
         <div>
           <span>LV. {String(level).padStart(2, "0")}</span>
           <span>RANK {rank}</span>

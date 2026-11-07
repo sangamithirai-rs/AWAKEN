@@ -6,10 +6,12 @@ import {
   Clock3,
   Sparkles,
   Target,
+  UserRound,
 } from "lucide-react";
 
 export type Page =
   | "SYSTEM"
+  | "CHARACTER"
   | "QUESTS"
   | "FOCUS"
   | "ANALYTICS"
@@ -24,12 +26,24 @@ type SystemNavProps = {
 
 import { sound } from "../utils/soundEffects";
 
+const compactLabels: Record<Page, string> = {
+  SYSTEM: "SYS",
+  CHARACTER: "HUNTER",
+  QUESTS: "QUEST",
+  FOCUS: "FOCUS",
+  ANALYTICS: "INTEL",
+  SKILLS: "SKILL",
+  ACHIEVEMENTS: "BADGE",
+  INVENTORY: "ITEMS",
+};
+
 export default function SystemNav({
   activePage,
   setActivePage,
 }: SystemNavProps) {
   const items: { label: Page; icon: typeof Sparkles }[] = [
     { label: "SYSTEM", icon: Sparkles },
+    { label: "CHARACTER", icon: UserRound },
     { label: "QUESTS", icon: Target },
     { label: "FOCUS", icon: Clock3 },
     { label: "ANALYTICS", icon: ChartNoAxesColumnIncreasing },
@@ -51,11 +65,15 @@ export default function SystemNav({
           key={label}
           onClick={() => handlePageSelect(label)}
           className={activePage === label ? "active" : ""}
+          aria-label={label}
           aria-current={activePage === label ? "page" : undefined}
           aria-pressed={activePage === label}
         >
           <Icon size={15} />
-          {label}
+          <span className="nav-label-full">{label}</span>
+          <span className="nav-label-compact" aria-hidden="true">
+            {compactLabels[label]}
+          </span>
         </button>
       ))}
     </nav>

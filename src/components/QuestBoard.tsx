@@ -15,9 +15,10 @@ export default function QuestBoard({
   onComplete,
   onDelete,
 }: QuestBoardProps) {
-  const [filter, setFilter] = useState("ALL");
+  const [filter, setFilter] = useState<"DAILY" | "WEEKLY" | "MAIN" | "SIDE">("DAILY");
+  const [category, setCategory] = useState("ALL");
 
-  const filters = useMemo(() => {
+  const categories = useMemo(() => {
     const categories = quests
       .map((q) => q.type)
       .filter((type): type is string => Boolean(type));
@@ -25,15 +26,22 @@ export default function QuestBoard({
   }, [quests]);
 
   const filteredQuests = useMemo(() => {
-    const categoryQuests = filter === "ALL"
-      ? quests
-      : quests.filter((quest) => quest.type === filter);
+    const categoryQuests = quests.filter((quest) => {
+      const inTab = filter === "DAILY"
+        ? quest.cadence === "DAILY"
+        : filter === "WEEKLY"
+          ? quest.cadence === "WEEKLY"
+          : filter === "MAIN"
+            ? quest.kind === "BOSS"
+            : quest.kind !== "BOSS" && quest.cadence === "ONCE";
+      return inTab && (category === "ALL" || quest.type === category);
+    });
     const priority = { HIGH: 0, NORMAL: 1, LOW: 2 };
     return categoryQuests
       .map((quest, index) => ({ quest, index }))
       .sort((a, b) => priority[a.quest.priority] - priority[b.quest.priority] || a.index - b.index)
       .map(({ quest }) => quest);
-  }, [quests, filter]);
+  }, [quests, filter, category]);
 
   const completedCount = filteredQuests.filter(
     (quest) => completedQuests.includes(quest.id)
@@ -50,9 +58,7 @@ export default function QuestBoard({
           </span>
 
           <h2>
-            {filter === "ALL"
-              ? "QUEST BOARD"
-              : `${filter} QUESTS`}
+            {filter === "MAIN" ? "MAIN QUESTS" : `${filter} QUESTS`}
           </h2>
         </div>
 
@@ -66,13 +72,12 @@ export default function QuestBoard({
         </div>
       </div>
 
-      <div className="quest-filters">
-        {filters.map((item) => (
+      <nav className="quest-cadence-tabs" aria-label="Quest cadence">
+        {(["DAILY", "WEEKLY", "MAIN", "SIDE"] as const).map((item) => (
           <button
             key={item}
-            className={
-              filter === item ? "active" : ""
-            }
+            type="button"
+            className={filter === item ? "active" : ""}
             aria-pressed={filter === item}
             aria-controls="quest-list"
             onClick={() => setFilter(item)}
@@ -80,7 +85,15 @@ export default function QuestBoard({
             {item}
           </button>
         ))}
-      </div>
+        {categories.length > 2 && (
+          <label className="quest-category-select">
+            CATEGORY
+            <select value={category} onChange={(event) => setCategory(event.target.value)}>
+              {categories.map((item) => <option key={item} value={item}>{item}</option>)}
+            </select>
+          </label>
+        )}
+      </nav>
 
       <div className="quest-list" id="quest-list">
         {filteredQuests.length === 0 ? (
@@ -135,6 +148,13 @@ export default function QuestBoard({
                   <p>
                     {quest.description}
                   </p>
+                  <details className="quest-details">
+                    <summary>MISSION DETAILS</summary>
+                    <p>{quest.description}</p>
+                    <span>
+                      {quest.cadence} CONTRACT · {quest.priority} PRIORITY · {quest.attribute.toUpperCase()} ATTRIBUTE
+                    </span>
+                  </details>
                   {quest.kind === "BOSS" && (
                     <div className="boss-progress">
                       <div

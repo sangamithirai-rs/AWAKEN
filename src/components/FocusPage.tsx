@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Pause, Play, RotateCcw, Target } from "lucide-react";
+import { History, Pause, Play, RotateCcw, X } from "lucide-react";
 import { sound } from "../utils/soundEffects";
 import type { FocusSession } from "../types/game";
 
@@ -17,6 +17,7 @@ export default function FocusPage({
   const [running, setRunning] = useState(false);
   const [task, setTask] = useState("");
   const [hasActiveSession, setHasActiveSession] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
   const deadlineRef = useRef<number | null>(null);
   const sessionIdRef = useRef<string | null>(null);
 
@@ -103,7 +104,7 @@ export default function FocusPage({
   ));
 
   return (
-    <section className="focus-page panel">
+    <section className={`focus-page panel ${showHistory ? "focus-history-open" : ""}`}>
       <div className="panel-corner" />
 
       <div className="focus-header">
@@ -120,7 +121,16 @@ export default function FocusPage({
           </p>
         </div>
 
-        <Target size={22} />
+        <button
+          type="button"
+          className="focus-history-toggle"
+          aria-expanded={showHistory}
+          aria-controls="focus-session-history"
+          onClick={() => setShowHistory((visible) => !visible)}
+        >
+          <History size={16} />
+          SESSION LOG
+        </button>
       </div>
 
       <div className="focus-task">
@@ -216,32 +226,44 @@ export default function FocusPage({
           : "SYSTEM READY"}
       </div>
 
-      <section className="focus-history" aria-labelledby="focus-history-title">
-        <div className="focus-history-heading">
-          <span className="system-label">SESSION LOG</span>
-          <h3 id="focus-history-title">RECENT CLEARS</h3>
-        </div>
-        {sessions.length === 0 ? (
-          <p className="focus-history-empty">No completed focus sessions recorded yet.</p>
-        ) : (
-          <ol>
-            {[...sessions].reverse().slice(0, 5).map((session) => (
-              <li key={session.id}>
-                <span>{session.task || "FOCUS SESSION"}</span>
-                <time dateTime={session.completedAt}>
-                  {new Date(session.completedAt).toLocaleString([], {
-                    month: "short",
-                    day: "numeric",
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                </time>
-                <strong>{session.durationMinutes} MIN · +{session.xp} XP</strong>
-              </li>
-            ))}
-          </ol>
-        )}
-      </section>
+      {showHistory && (
+        <aside className="focus-history" id="focus-session-history" aria-labelledby="focus-history-title">
+          <div className="focus-history-heading">
+            <div>
+              <span className="system-label">SESSION LOG</span>
+              <h3 id="focus-history-title">RECENT CLEARS</h3>
+            </div>
+            <button
+              type="button"
+              className="focus-history-close"
+              aria-label="Close session log"
+              onClick={() => setShowHistory(false)}
+            >
+              <X size={16} />
+            </button>
+          </div>
+          {sessions.length === 0 ? (
+            <p className="focus-history-empty">No completed focus sessions recorded yet.</p>
+          ) : (
+            <ol>
+              {[...sessions].reverse().slice(0, 5).map((session) => (
+                <li key={session.id}>
+                  <span>{session.task || "FOCUS SESSION"}</span>
+                  <time dateTime={session.completedAt}>
+                    {new Date(session.completedAt).toLocaleString([], {
+                      month: "short",
+                      day: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </time>
+                  <strong>{session.durationMinutes} MIN · +{session.xp} XP</strong>
+                </li>
+              ))}
+            </ol>
+          )}
+        </aside>
+      )}
     </section>
   );
 }

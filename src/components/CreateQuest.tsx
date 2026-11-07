@@ -52,12 +52,13 @@ export default function CreateQuest({
       case "FITNESS":
         return "strength";
       case "STUDY":
-      case "CODING":
         return "intelligence";
+      case "CODING":
+        return "creativity";
       case "DAILY":
         return "discipline";
       case "PROJECT":
-        return "focus";
+        return "creativity";
       default:
         return "consistency";
     }
@@ -311,7 +312,9 @@ export default function CreateQuest({
             >
               <option value="strength">STRENGTH</option>
               <option value="intelligence">INTELLIGENCE</option>
+              <option value="vitality">VITALITY</option>
               <option value="discipline">DISCIPLINE</option>
+              <option value="creativity">CREATIVITY</option>
               <option value="focus">FOCUS</option>
               <option value="consistency">CONSISTENCY</option>
             </select>

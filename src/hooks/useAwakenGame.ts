@@ -7,6 +7,7 @@ import {
 } from "../game/gameData";
 import {
   advanceBossQuest,
+  grantItemUse,
   grantFocusSessionReward,
   grantQuestReward,
   getLevelProgress,
@@ -15,7 +16,23 @@ import {
   getWeeklyStreakProgress,
   type ProgressionState,
 } from "../game/progression";
-import type { CustomQuest, FocusSession, NewQuest, Quest } from "../types/game";
+import { normalizeCharacterProfile } from "../game/character";
+import {
+  equipItem as equipOwnedItem,
+  getEffectiveAttributes,
+  purchaseItem as buyCatalogItem,
+  unequipItem as removeEquippedItem,
+} from "../game/inventory";
+import { unlockSkill as unlockSkillNode } from "../game/skills";
+import type {
+  CharacterProfile,
+  CustomQuest,
+  FocusSession,
+  NewQuest,
+  Quest,
+  SkillNodeId,
+  EquipmentSlot,
+} from "../types/game";
 import { loadGameSave, saveGame } from "../game/storage";
 
 export function useAwakenGame() {
@@ -30,7 +47,7 @@ export function useAwakenGame() {
   const [currentDateKey, setCurrentDateKey] = useState(getLocalDateKey);
   const [storageWarning, setStorageWarning] = useState(initialSave.warning);
   const [notification, setNotification] = useState<string | null>(null);
-  const [levelUp, setLevelUp] = useState(false);
+  const [levelUp, setLevelUp] = useState<{ from: number; to: number } | null>(null);
   const [soundEnabled, setSoundEnabled] = useState(() => sound.isEnabled());
   const notificationTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const levelUpTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -50,13 +67,19 @@ export function useAwakenGame() {
     nextCustomCategories: string[],
   ) => {
     const warning = saveGame({
-      version: 2,
+      version: 4,
       ...nextProgression,
       customQuests: nextCustomQuests,
       customCategories: nextCustomCategories,
     });
     if (warning) setStorageWarning(warning);
   }, []);
+
+  const commitProgression = useCallback((nextProgression: ProgressionState) => {
+    persistGame(nextProgression, customQuestsRef.current, customCategoriesRef.current);
+    progressionRef.current = nextProgression;
+    setProgression(nextProgression);
+  }, [persistGame]);
 
   useEffect(() => {
     const checkForNewDay = () => {
@@ -75,17 +98,20 @@ export function useAwakenGame() {
     if (levelUpTimeout.current) clearTimeout(levelUpTimeout.current);
   }, []);
 
-  const triggerLevelUp = useCallback(() => {
-    setLevelUp(true);
+  const triggerLevelUp = useCallback((from: number, to: number) => {
+    setLevelUp({ from, to });
     sound.playLevelUp();
     if (levelUpTimeout.current) clearTimeout(levelUpTimeout.current);
     levelUpTimeout.current = setTimeout(() => {
-      setLevelUp(false);
+      setLevelUp(null);
       levelUpTimeout.current = null;
     }, 4500);
   }, []);
 
   const completeQuest = useCallback((quest: Quest) => {
+    const previousLevel = getLevelProgress(progressionRef.current.xp).level;
+    const previousGold = progressionRef.current.gold;
+    const previousSkillPoints = progressionRef.current.skillPoints;
     const storedQuest = customQuestsRef.current.find((item) => item.id === quest.id);
     if (storedQuest?.kind === "BOSS") {
       const currentCount = storedQuest.currentCount ?? 0;
@@ -125,10 +151,12 @@ export function useAwakenGame() {
       setCustomQuests(nextCustomQuests);
       progressionRef.current = bossResult.state;
       setProgression(bossResult.state);
-      if (bossResult.leveledUp) triggerLevelUp();
+      if (bossResult.leveledUp) {
+        triggerLevelUp(previousLevel, getLevelProgress(bossResult.state.xp).level);
+      }
       sound.playQuestComplete();
       sound.playStatPoint();
-      showNotification(`BOSS DEFEATED // +${quest.xp} XP`);
+      showNotification(`BOSS DEFEATED // +${bossResult.earnedXP ?? quest.xp} XP // +${bossResult.state.gold - previousGold} GOLD // +${bossResult.state.skillPoints - previousSkillPoints} SP`);
       return;
     }
 
@@ -137,23 +165,29 @@ export function useAwakenGame() {
     persistGame(result.state, customQuestsRef.current, customCategoriesRef.current);
     progressionRef.current = result.state;
     setProgression(result.state);
-    if (result.leveledUp) triggerLevelUp();
+    if (result.leveledUp) {
+      triggerLevelUp(previousLevel, getLevelProgress(result.state.xp).level);
+    }
     sound.playQuestComplete();
     sound.playStatPoint();
 
-    if (!result.leveledUp) showNotification(`QUEST COMPLETE  //  +${quest.xp} XP`);
+    showNotification(`QUEST COMPLETE // +${result.earnedXP ?? quest.xp} XP // +${result.state.gold - previousGold} GOLD // +${result.state.skillPoints - previousSkillPoints} SP`);
   }, [persistGame, showNotification, triggerLevelUp]);
 
   const completeFocusSession = useCallback((session: FocusSession) => {
-    const result = grantFocusSessionReward(progressionRef.current, session);
+    const current = progressionRef.current;
+    const previousLevel = getLevelProgress(current.xp).level;
+    const result = grantFocusSessionReward(current, session);
     if (!result.granted) return;
     persistGame(result.state, customQuestsRef.current, customCategoriesRef.current);
     progressionRef.current = result.state;
     setProgression(result.state);
-    if (result.leveledUp) triggerLevelUp();
+    if (result.leveledUp) {
+      triggerLevelUp(previousLevel, getLevelProgress(result.state.xp).level);
+    }
     sound.playQuestComplete();
     showNotification(
-      `${session.task ? `${session.task.toUpperCase()} // ` : ""}FOCUS SESSION COMPLETE // +${session.xp} XP`,
+      `${session.task ? `${session.task.toUpperCase()} // ` : ""}FOCUS SESSION COMPLETE // +${result.earnedXP ?? session.xp} XP // +${result.state.gold - current.gold} GOLD // +${result.state.skillPoints - current.skillPoints} SP`,
     );
   }, [persistGame, showNotification, triggerLevelUp]);
 
@@ -164,6 +198,98 @@ export function useAwakenGame() {
     if (warning) setStorageWarning(warning);
     if (enabled) sound.playClick();
   }, []);
+
+  const updateCharacterProfile = useCallback((profile: CharacterProfile) => {
+    const normalizedProfile = normalizeCharacterProfile(profile);
+    if (!normalizedProfile) {
+      showNotification("PROFILE UPDATE FAILED // CHECK NAME AND CLASS SPECIALIZATION");
+      return;
+    }
+    const nextProgression = {
+      ...progressionRef.current,
+      profile: normalizedProfile,
+    };
+    persistGame(nextProgression, customQuestsRef.current, customCategoriesRef.current);
+    progressionRef.current = nextProgression;
+    setProgression(nextProgression);
+    sound.playClick();
+    showNotification(`HUNTER PROFILE UPDATED // ${normalizedProfile.name.toUpperCase()}`);
+  }, [persistGame, showNotification]);
+
+  const unlockSkill = useCallback((nodeId: SkillNodeId) => {
+    const result = unlockSkillNode(progressionRef.current, nodeId);
+    if (!result.success) {
+      showNotification(`SKILL UNLOCK FAILED // ${result.reason ?? "CHECK REQUIREMENTS"}`);
+      return;
+    }
+    commitProgression(result.state);
+    sound.playStatPoint();
+    showNotification(`SKILL RANK INCREASED // ${nodeId.replaceAll("_", " ")}`);
+  }, [commitProgression, showNotification]);
+
+  const purchaseInventoryItem = useCallback((itemId: string) => {
+    const result = buyCatalogItem(
+      progressionRef.current,
+      itemId,
+      `purchase:${crypto.randomUUID()}`,
+    );
+    if (!result.success) {
+      const message = result.reason === "INSUFFICIENT_GOLD"
+        ? "INSUFFICIENT GOLD"
+        : result.reason === "LEVEL_REQUIRED"
+          ? "HUNTER LEVEL REQUIREMENT NOT MET"
+          : result.reason === "ALREADY_OWNED"
+            ? "ITEM ALREADY OWNED"
+            : "ITEM PURCHASE REJECTED";
+      showNotification(`SHOP // ${message}`);
+      return;
+    }
+    commitProgression(result.state);
+    sound.playClick();
+    showNotification(`ITEM ACQUIRED // ${itemId.replaceAll("-", " ").toUpperCase()}`);
+  }, [commitProgression, showNotification]);
+
+  const equipItem = useCallback((itemId: string) => {
+    const result = equipOwnedItem(progressionRef.current, itemId);
+    if (!result.success) {
+      showNotification(`EQUIPMENT UPDATE FAILED // ${result.reason ?? "CHECK OWNERSHIP"}`);
+      return;
+    }
+    commitProgression(result.state);
+    sound.playStatPoint();
+    showNotification(`EQUIPPED // ${itemId.replaceAll("-", " ").toUpperCase()}`);
+  }, [commitProgression, showNotification]);
+
+  const unequipItem = useCallback((slot: EquipmentSlot) => {
+    const result = removeEquippedItem(progressionRef.current, slot);
+    if (!result.success) {
+      showNotification(`EQUIPMENT UPDATE FAILED // ${result.reason ?? "SLOT EMPTY"}`);
+      return;
+    }
+    commitProgression(result.state);
+    sound.playClick();
+    showNotification(`${slot} SLOT CLEARED`);
+  }, [commitProgression, showNotification]);
+
+  const useInventoryItem = useCallback((itemId: string) => {
+    const current = progressionRef.current;
+    const previousLevel = getLevelProgress(current.xp).level;
+    const result = grantItemUse(
+      current,
+      itemId,
+      `use:${crypto.randomUUID()}`,
+    );
+    if (!result.granted) {
+      showNotification("ITEM USE FAILED // ITEM IS UNAVAILABLE OR NOT USABLE");
+      return;
+    }
+    commitProgression(result.state);
+    if (result.leveledUp) {
+      triggerLevelUp(previousLevel, getLevelProgress(result.state.xp).level);
+    }
+    sound.playQuestComplete();
+    showNotification(`ITEM USED // +${result.earnedXP ?? 0} XP`);
+  }, [commitProgression, showNotification, triggerLevelUp]);
 
   const deleteQuest = useCallback((questId: string) => {
     const nextCustomQuests = customQuestsRef.current.filter((quest) => quest.id !== questId);
@@ -256,6 +382,7 @@ export function useAwakenGame() {
     addCustomCategory,
     allQuests,
     attributes,
+    characterProfile: progression.profile,
     completeFocusSession,
     completeQuest,
     completedQuestCount,
@@ -266,6 +393,20 @@ export function useAwakenGame() {
     customQuests,
     deleteQuest,
     focusSessions,
+    skillPoints: progression.skillPoints,
+    skillLevels: progression.skillLevels,
+    branchXP: progression.branchXP,
+    classXP: progression.classXP,
+    gold: progression.gold,
+    inventory: progression.inventory,
+    equipment: progression.equipment,
+    transactions: progression.transactions,
+    equipItem,
+    purchaseInventoryItem,
+    unequipItem,
+    unlockSkill,
+    useInventoryItem,
+    effectiveAttributes: getEffectiveAttributes(attributes, progression.equipment),
     level,
     levelUp,
     notification,
@@ -285,6 +426,7 @@ export function useAwakenGame() {
     storageWarning,
     skillXP: progression.skillXP,
     toggleSound,
+    updateCharacterProfile,
     xp,
     xpPercentage,
   };

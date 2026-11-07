@@ -1,4 +1,6 @@
+import { useState } from "react";
 import { Award, Brain, Flame, Shield, Target, Zap } from "lucide-react";
+import { getAchievementProgress, type AchievementId } from "../game/achievements";
 
 type AchievementsPageProps = {
   level: number;
@@ -9,54 +11,24 @@ export default function AchievementsPage({
   level,
   questCompletions,
 }: AchievementsPageProps) {
-  const achievements = [
-    {
-      title: "FIRST AWAKENING",
-      description: "Complete your first System quest.",
-      icon: Award,
-      progress: questCompletions,
-      target: 1,
-    },
-    {
-      title: "DISCIPLINED",
-      description: "Complete 3 quests.",
-      icon: Shield,
-      progress: questCompletions,
-      target: 3,
-    },
-    {
-      title: "KNOWLEDGE SEEKER",
-      description: "Complete 5 quests.",
-      icon: Brain,
-      progress: questCompletions,
-      target: 5,
-    },
-    {
-      title: "FOCUS PROTOCOL",
-      description: "Reach Level 2.",
-      icon: Target,
-      progress: level,
-      target: 2,
-    },
-    {
-      title: "RISING HUNTER",
-      description: "Reach Level 5.",
-      icon: Flame,
-      progress: level,
-      target: 5,
-    },
-    {
-      title: "SHADOW MONARCH",
-      description: "Reach Level 10.",
-      icon: Zap,
-      progress: level,
-      target: 10,
-    },
-  ];
+  const [filter, setFilter] = useState<"ALL" | "UNLOCKED" | "IN_PROGRESS">("ALL");
+  const icons: Record<AchievementId, typeof Award> = {
+    FIRST_AWAKENING: Award,
+    DISCIPLINED: Shield,
+    KNOWLEDGE_SEEKER: Brain,
+    FOCUS_PROTOCOL: Target,
+    RISING_HUNTER: Flame,
+    SHADOW_MONARCH: Zap,
+  };
+  const achievements = getAchievementProgress(level, questCompletions);
 
   const unlockedCount = achievements.filter(
-    (achievement) => achievement.progress >= achievement.target
+    (achievement) => achievement.unlocked
   ).length;
+  const visibleAchievements = achievements.filter((achievement) =>
+    filter === "ALL"
+      || (filter === "UNLOCKED" ? achievement.unlocked : !achievement.unlocked)
+  );
 
   return (
     <section className="panel achievements-page">
@@ -73,16 +45,28 @@ export default function AchievementsPage({
         </span>
       </div>
 
+      <nav className="achievement-filters" aria-label="Achievement filter">
+        {(["ALL", "UNLOCKED", "IN_PROGRESS"] as const).map((item) => (
+          <button
+            type="button"
+            key={item}
+            className={filter === item ? "active" : ""}
+            aria-pressed={filter === item}
+            onClick={() => setFilter(item)}
+          >
+            {item === "IN_PROGRESS" ? "IN PROGRESS" : item}
+          </button>
+        ))}
+      </nav>
+
       <div className="achievements-grid">
-        {achievements.map((achievement) => {
-          const Icon = achievement.icon;
-          const unlocked = achievement.progress >= achievement.target;
-          const progress = Math.min(achievement.progress, achievement.target);
+        {visibleAchievements.map((achievement) => {
+          const Icon = icons[achievement.id];
 
           return (
             <div
               className={`achievement-card ${
-                unlocked ? "unlocked" : "locked"
+                achievement.unlocked ? "unlocked" : "locked"
               }`}
               key={achievement.title}
             >
@@ -92,7 +76,7 @@ export default function AchievementsPage({
 
               <div>
                 <span className="achievement-status">
-                  {unlocked ? "UNLOCKED" : "IN PROGRESS"}
+                  {achievement.unlocked ? "UNLOCKED" : "IN PROGRESS"}
                 </span>
 
                 <h3>{achievement.title}</h3>
@@ -104,12 +88,12 @@ export default function AchievementsPage({
                   aria-label={`${achievement.title} progress`}
                   aria-valuemin={0}
                   aria-valuemax={achievement.target}
-                  aria-valuenow={progress}
+                  aria-valuenow={achievement.progress}
                 >
-                  <span style={{ width: `${(progress / achievement.target) * 100}%` }} />
+                  <span style={{ width: `${(achievement.progress / achievement.target) * 100}%` }} />
                 </div>
                 <span className="achievement-progress-label">
-                  {progress}/{achievement.target}
+                  {achievement.progress}/{achievement.target}
                 </span>
               </div>
             </div>

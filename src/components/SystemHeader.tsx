@@ -16,6 +16,7 @@ type SystemHeaderProps = {
 
 const pageTitles: Record<Page, string> = {
   SYSTEM: "HUNTER COMMAND",
+  CHARACTER: "HUNTER DOSSIER",
   QUESTS: "QUEST OPERATIONS",
   FOCUS: "FOCUS PROTOCOL",
   ANALYTICS: "WEEKLY INTEL",

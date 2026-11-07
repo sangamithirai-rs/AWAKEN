@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getWeeklyAnalytics } from "./analytics";
+import { getPeriodAnalytics, getWeeklyAnalytics } from "./analytics";
 import type { ActivityEvent, FocusSession } from "../types/game";
 
 function event(
@@ -70,5 +70,34 @@ describe("weekly analytics", () => {
     expect(analytics.quests).toBe(0);
     expect(analytics.focusMinutes).toBe(0);
     expect(analytics.activeDays).toBe(0);
+  });
+
+  it("excludes item-use rewards from real-world productivity analytics", () => {
+    const analytics = getWeeklyAnalytics(
+      [
+        event("tonic-reward", "2026-04-08", "SYSTEM_REWARD", 100),
+        event("quest", "2026-04-08", "QUEST", 50),
+      ],
+      [],
+      new Date(2026, 3, 8, 12),
+    );
+    expect(analytics.xp).toBe(50);
+    expect(analytics.quests).toBe(1);
+    expect(analytics.activeDays).toBe(1);
+  });
+
+  it("builds daily and monthly reports from recorded data only", () => {
+    const events = [
+      event("month-start", "2026-04-01", "QUEST", 100),
+      event("month-today", "2026-04-08", "QUEST", 50),
+      event("last-month", "2026-03-08", "QUEST", 25),
+    ];
+    const daily = getPeriodAnalytics(events, [], "DAILY", new Date(2026, 3, 8, 12));
+    const monthly = getPeriodAnalytics(events, [], "MONTHLY", new Date(2026, 3, 8, 12));
+    expect(daily.xp).toBe(50);
+    expect(daily.days).toHaveLength(1);
+    expect(monthly.xp).toBe(150);
+    expect(monthly.days).toHaveLength(8);
+    expect(monthly.previous.xp).toBe(25);
   });
 });

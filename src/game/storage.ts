@@ -1,28 +1,70 @@
-import { combineQuests, dailyQuests, defaultAttributes, getLocalDateKey, getQuestPeriodKey } from "./gameData";
+import {
+  combineQuests,
+  dailyQuests,
+  defaultAttributes,
+  defaultCharacterProfile,
+  getLocalDateKey,
+  getQuestPeriodKey,
+} from "./gameData";
+import { isSpecializationForClass } from "./character";
 import type {
   ActivityEvent,
   Attributes,
+  CharacterProfile,
+  ClassXP,
   CustomQuest,
+  Equipment,
   FocusSession,
+  GameTransaction,
+  OwnedItem,
   QuestCadence,
+  SkillLevels,
   SkillXP,
 } from "../types/game";
-import type { ProgressionState } from "./progression";
+import { getProgressionBranch, type ProgressionState } from "./progression";
+import { createEmptyEquipment, getItem } from "./inventory";
+import { createEmptySkillLevels, skillNodes } from "./skills";
 
 export type GameSave = ProgressionState & {
-  version: 2;
+  version: 4;
   customQuests: CustomQuest[];
   customCategories: string[];
 };
 
-type VersionOneGameSave = {
-  version: 1;
+type VersionThreeGameSave = {
+  version: 3;
+  profile: CharacterProfile;
   xp: number;
   attributes: Attributes;
   customQuests: CustomQuest[];
   rewardedQuestPeriods: string[];
   questCompletions: number;
   focusSessions: FocusSession[];
+  activityLog: ActivityEvent[];
+  activityDates: string[];
+  skillXP: SkillXP;
+  recoveryDays: string[];
+  customCategories: string[];
+};
+
+type LegacyAttributes = Pick<
+  Attributes,
+  "strength" | "intelligence" | "discipline" | "focus" | "consistency"
+>;
+
+type VersionOneGameSave = {
+  version: 1;
+  xp: number;
+  attributes: LegacyAttributes;
+  customQuests: CustomQuest[];
+  rewardedQuestPeriods: string[];
+  questCompletions: number;
+  focusSessions: FocusSession[];
+};
+
+type VersionTwoGameSave = Omit<VersionThreeGameSave, "version" | "profile" | "attributes"> & {
+  version: 2;
+  attributes: LegacyAttributes;
 };
 
 type LoadedGameSave = {
@@ -32,8 +74,22 @@ type LoadedGameSave = {
 
 const SAVE_KEY = "awaken-save";
 const attributeNames = Object.keys(defaultAttributes) as (keyof Attributes)[];
+const legacyAttributeNames: (keyof LegacyAttributes)[] = [
+  "strength",
+  "intelligence",
+  "discipline",
+  "focus",
+  "consistency",
+];
 const cadences = new Set<QuestCadence>(["DAILY", "WEEKLY", "ONCE"]);
 const skillBranches: (keyof SkillXP)[] = ["BODY", "MIND", "WILL"];
+const progressionClasses: (keyof ClassXP)[] = [
+  "WARRIOR",
+  "SCHOLAR",
+  "SHADOW_HUNTER",
+  "ARCHITECT",
+  "PHANTOM",
+];
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -47,6 +103,31 @@ function isAttributes(value: unknown): value is Attributes {
   return isRecord(value) && attributeNames.every((name) => isNonNegativeInteger(value[name]));
 }
 
+function isLegacyAttributes(value: unknown): value is LegacyAttributes {
+  return isRecord(value)
+    && legacyAttributeNames.every((name) => isNonNegativeInteger(value[name]));
+}
+
+function upgradeAttributes(attributes: LegacyAttributes): Attributes {
+  return {
+    ...defaultAttributes,
+    ...attributes,
+  };
+}
+
+function isCharacterProfile(value: unknown): value is CharacterProfile {
+  return isRecord(value)
+    && typeof value.name === "string"
+    && value.name.trim().length > 0
+    && value.name.trim().length <= 24
+    && typeof value.hunterClass === "string"
+    && typeof value.specialization === "string"
+    && isSpecializationForClass(
+      value.hunterClass as CharacterProfile["hunterClass"],
+      value.specialization as CharacterProfile["specialization"],
+    );
+}
+
 function isSkillXP(value: unknown): value is SkillXP {
   return isRecord(value)
     && skillBranches.every((branch) => isNonNegativeInteger(value[branch]));
@@ -55,13 +136,61 @@ function isSkillXP(value: unknown): value is SkillXP {
 function isActivityEvent(value: unknown): value is ActivityEvent {
   return isRecord(value)
     && typeof value.id === "string"
-    && ["QUEST", "FOCUS", "BOSS_PROGRESS"].includes(String(value.kind))
+    && ["QUEST", "FOCUS", "BOSS_PROGRESS", "SYSTEM_REWARD"].includes(String(value.kind))
     && typeof value.occurredAt === "string"
     && Number.isFinite(Date.parse(value.occurredAt))
     && typeof value.activityDate === "string"
     && /^\d{4}-\d{2}-\d{2}$/.test(value.activityDate)
     && isNonNegativeInteger(value.xp)
     && (value.questId === undefined || typeof value.questId === "string");
+}
+
+function isSkillLevels(value: unknown): value is SkillLevels {
+  return isRecord(value)
+    && skillNodes.every((node) => {
+      const rank = value[node.id];
+      return isNonNegativeInteger(rank) && rank <= node.maxLevel;
+    });
+}
+
+function isClassXP(value: unknown): value is ClassXP {
+  return isRecord(value)
+    && progressionClasses.every((branch) => isNonNegativeInteger(value[branch]));
+}
+
+function isOwnedItem(value: unknown): value is OwnedItem {
+  return isRecord(value)
+    && typeof value.itemId === "string"
+    && getItem(value.itemId) !== undefined
+    && isNonNegativeInteger(value.quantity)
+    && value.quantity > 0;
+}
+
+function isEquipment(value: unknown, inventory: OwnedItem[]): value is Equipment {
+  if (!isRecord(value)) return false;
+  const slots = ["WEAPON", "ARMOUR", "ACCESSORY"] as const;
+  return Object.keys(value).every((key) => slots.includes(key as typeof slots[number]))
+    && slots.every((slot) => {
+      const itemId = value[slot];
+      if (itemId === undefined) return true;
+      const item = typeof itemId === "string" ? getItem(itemId) : undefined;
+      return item?.slot === slot
+        && inventory.some((owned) => owned.itemId === itemId && owned.quantity > 0);
+    });
+}
+
+function isGameTransaction(value: unknown): value is GameTransaction {
+  return isRecord(value)
+    && typeof value.id === "string"
+    && value.id.length > 0
+    && (value.type === "PURCHASE" || value.type === "USE")
+    && typeof value.itemId === "string"
+    && getItem(value.itemId) !== undefined
+    && isNonNegativeInteger(value.quantity)
+    && value.quantity > 0
+    && isNonNegativeInteger(value.gold)
+    && typeof value.occurredAt === "string"
+    && Number.isFinite(Date.parse(value.occurredAt));
 }
 
 function isCustomQuest(value: unknown): value is CustomQuest {
@@ -155,11 +284,39 @@ function getSkillXPFromActivities(
       continue;
     }
     const attribute = attributesByQuest.get(activity.questId ?? "");
-    const branch = attribute === "strength"
+    const branch = attribute === "strength" || attribute === "vitality"
       ? "BODY"
-      : attribute === "intelligence" || attribute === "focus"
+      : attribute === "intelligence" || attribute === "focus" || attribute === "creativity"
         ? "MIND"
         : "WILL";
+    branches[branch] += activity.xp;
+  }
+  return branches;
+}
+
+function getProgressionXPFromActivities(
+  activities: ActivityEvent[],
+  customQuests: CustomQuest[],
+): ClassXP {
+  const branches: ClassXP = {
+    WARRIOR: 0,
+    SCHOLAR: 0,
+    SHADOW_HUNTER: 0,
+    ARCHITECT: 0,
+    PHANTOM: 0,
+  };
+  const questById = new Map(
+    combineQuests(customQuests).map((quest) => [quest.id, quest]),
+  );
+  for (const activity of activities) {
+    if (activity.kind === "SYSTEM_REWARD") continue;
+    if (activity.kind === "FOCUS") {
+      branches.PHANTOM += activity.xp;
+      continue;
+    }
+    const quest = questById.get(activity.questId ?? "");
+    if (!quest) continue;
+    const branch = getProgressionBranch(quest.attribute, quest.type);
     branches[branch] += activity.xp;
   }
   return branches;
@@ -169,7 +326,7 @@ function isLegacyGameSave(value: unknown): value is VersionOneGameSave {
   return isRecord(value)
     && value.version === 1
     && isNonNegativeInteger(value.xp)
-    && isAttributes(value.attributes)
+    && isLegacyAttributes(value.attributes)
     && Array.isArray(value.customQuests)
     && value.customQuests.every(isCustomQuest)
     && Array.isArray(value.rewardedQuestPeriods)
@@ -179,11 +336,11 @@ function isLegacyGameSave(value: unknown): value is VersionOneGameSave {
     && value.focusSessions.every(isFocusSession);
 }
 
-function isGameSave(value: unknown): value is GameSave {
+function isVersionTwoGameSave(value: unknown): value is VersionTwoGameSave {
   return isRecord(value)
     && value.version === 2
     && isNonNegativeInteger(value.xp)
-    && isAttributes(value.attributes)
+    && isLegacyAttributes(value.attributes)
     && Array.isArray(value.customQuests)
     && value.customQuests.every(isCustomQuest)
     && Array.isArray(value.rewardedQuestPeriods)
@@ -202,9 +359,84 @@ function isGameSave(value: unknown): value is GameSave {
     && value.customCategories.every((item) => typeof item === "string" && item.trim().length > 0);
 }
 
+function isGameSave(value: unknown): value is GameSave {
+  return isRecord(value)
+    && value.version === 4
+    && isNonNegativeInteger(value.xp)
+    && isAttributes(value.attributes)
+    && isCharacterProfile(value.profile)
+    && Array.isArray(value.customQuests)
+    && value.customQuests.every(isCustomQuest)
+    && Array.isArray(value.rewardedQuestPeriods)
+    && value.rewardedQuestPeriods.every((item) => typeof item === "string")
+    && isNonNegativeInteger(value.questCompletions)
+    && Array.isArray(value.focusSessions)
+    && value.focusSessions.every(isFocusSession)
+    && Array.isArray(value.activityLog)
+    && value.activityLog.every(isActivityEvent)
+    && Array.isArray(value.activityDates)
+    && value.activityDates.every((item) => typeof item === "string" && /^\d{4}-\d{2}-\d{2}$/.test(item))
+    && isSkillXP(value.skillXP)
+    && isNonNegativeInteger(value.skillPoints)
+    && isSkillLevels(value.skillLevels)
+    && isClassXP(value.branchXP)
+    && isClassXP(value.classXP)
+    && isNonNegativeInteger(value.gold)
+    && Array.isArray(value.inventory)
+    && value.inventory.every(isOwnedItem)
+    && isEquipment(value.equipment, value.inventory)
+    && Array.isArray(value.transactions)
+    && value.transactions.every(isGameTransaction)
+    && Array.isArray(value.recoveryDays)
+    && value.recoveryDays.every((item) => typeof item === "string" && /^\d{4}-\d{2}-\d{2}$/.test(item))
+    && Array.isArray(value.customCategories)
+    && value.customCategories.every((item) => typeof item === "string" && item.trim().length > 0);
+}
+
+function isVersionThreeGameSave(value: unknown): value is VersionThreeGameSave {
+  return isRecord(value)
+    && value.version === 3
+    && isNonNegativeInteger(value.xp)
+    && isAttributes(value.attributes)
+    && isCharacterProfile(value.profile)
+    && Array.isArray(value.customQuests)
+    && value.customQuests.every(isCustomQuest)
+    && Array.isArray(value.rewardedQuestPeriods)
+    && value.rewardedQuestPeriods.every((item) => typeof item === "string")
+    && isNonNegativeInteger(value.questCompletions)
+    && Array.isArray(value.focusSessions)
+    && value.focusSessions.every(isFocusSession)
+    && Array.isArray(value.activityLog)
+    && value.activityLog.every(isActivityEvent)
+    && Array.isArray(value.activityDates)
+    && value.activityDates.every((item) => typeof item === "string" && /^\d{4}-\d{2}-\d{2}$/.test(item))
+    && isSkillXP(value.skillXP)
+    && Array.isArray(value.recoveryDays)
+    && value.recoveryDays.every((item) => typeof item === "string" && /^\d{4}-\d{2}-\d{2}$/.test(item))
+    && Array.isArray(value.customCategories)
+    && value.customCategories.every((item) => typeof item === "string" && item.trim().length > 0);
+}
+
+function upgradeVersionThree(save: VersionThreeGameSave): GameSave {
+  const branchXP = getProgressionXPFromActivities(save.activityLog, save.customQuests);
+  return {
+    ...save,
+    version: 4,
+    skillPoints: Math.floor(save.xp / 1000),
+    skillLevels: createEmptySkillLevels(),
+    branchXP,
+    classXP: { ...branchXP },
+    gold: 0,
+    inventory: [],
+    equipment: createEmptyEquipment(),
+    transactions: [],
+  };
+}
+
 function defaultSave(): GameSave {
   return {
-    version: 2,
+    version: 4,
+    profile: { ...defaultCharacterProfile },
     xp: 0,
     attributes: { ...defaultAttributes },
     customQuests: [],
@@ -214,6 +446,26 @@ function defaultSave(): GameSave {
     activityLog: [],
     activityDates: [],
     skillXP: { BODY: 0, MIND: 0, WILL: 0 },
+    skillPoints: 0,
+    skillLevels: createEmptySkillLevels(),
+    branchXP: {
+      WARRIOR: 0,
+      SCHOLAR: 0,
+      SHADOW_HUNTER: 0,
+      ARCHITECT: 0,
+      PHANTOM: 0,
+    },
+    classXP: {
+      WARRIOR: 0,
+      SCHOLAR: 0,
+      SHADOW_HUNTER: 0,
+      ARCHITECT: 0,
+      PHANTOM: 0,
+    },
+    gold: 0,
+    inventory: [],
+    equipment: createEmptyEquipment(),
+    transactions: [],
     recoveryDays: [],
     customCategories: [],
   };
@@ -245,6 +497,20 @@ export function loadGameSave(): LoadedGameSave {
   if (currentRaw !== null) {
     const current = parse(SAVE_KEY, currentRaw);
     if (isGameSave(current)) return { save: current, warning: null };
+    if (isVersionThreeGameSave(current)) {
+      return { save: upgradeVersionThree(current), warning: null };
+    }
+    if (isVersionTwoGameSave(current)) {
+      return {
+        save: upgradeVersionThree({
+          ...current,
+          version: 3,
+          profile: { ...defaultCharacterProfile },
+          attributes: upgradeAttributes(current.attributes),
+        }),
+        warning: null,
+      };
+    }
     if (isLegacyGameSave(current)) {
       const focusSessions = current.focusSessions.filter(
         (session) => Number.isFinite(Date.parse(session.completedAt)),
@@ -254,15 +520,17 @@ export function loadGameSave(): LoadedGameSave {
         ...focusSessions.map(getFocusActivity),
       ];
       return {
-        save: {
+        save: upgradeVersionThree({
           ...current,
-          version: 2,
+          version: 3,
+          profile: { ...defaultCharacterProfile },
+          attributes: upgradeAttributes(current.attributes),
           activityLog: allActivities.slice(-2000),
           activityDates: [...new Set(allActivities.map((activity) => activity.activityDate))].sort(),
           skillXP: getSkillXPFromActivities(allActivities.slice(-2000), current.customQuests),
           recoveryDays: [],
           customCategories: [],
-        },
+        }),
         warning: null,
       };
     }
@@ -293,6 +561,7 @@ export function loadGameSave(): LoadedGameSave {
 
   const legacyAttributes = parse("awaken-attributes", read("awaken-attributes"));
   if (isAttributes(legacyAttributes)) save.attributes = legacyAttributes;
+  else if (isLegacyAttributes(legacyAttributes)) save.attributes = upgradeAttributes(legacyAttributes);
   else if (legacyAttributes !== undefined) {
     console.error("Legacy attribute data has an invalid shape.", legacyAttributes);
     warnings.push("Invalid attributes were replaced with safe defaults.");

@@ -1,128 +1,154 @@
-import { Brain, Shield, Sparkles, Zap } from "lucide-react";
-import type { SkillBranch, SkillXP } from "../types/game";
+import { motion } from "framer-motion";
+import {
+  Brain,
+  Code2,
+  Lightbulb,
+  Shield,
+  Sparkles,
+  Target,
+} from "lucide-react";
+import type {
+  ProgressionClass,
+  SkillLevels,
+  SkillNodeId,
+  SkillXP,
+} from "../types/game";
+import {
+  getSkillUnlockReason,
+  skillBranches,
+  skillNodes,
+} from "../game/skills";
 
 type SkillsPageProps = {
   level: number;
   skillXP: SkillXP;
+  skillPoints: number;
+  branchXP: Record<ProgressionClass, number>;
+  skillLevels: SkillLevels;
+  onUnlock: (nodeId: SkillNodeId) => void;
 };
 
-const trees: {
-  branch: SkillBranch;
-  title: string;
-  description: string;
-  icon: typeof Shield;
-  linkedStats: string;
-  nodes: { name: string; description: string; threshold: number }[];
-}[] = [
-  {
-    branch: "BODY",
-    title: "IRON BODY",
-    description: "Physical objectives feed this progression path.",
-    icon: Shield,
-    linkedStats: "STRENGTH",
-    nodes: [
-      { name: "CONDITIONING I", description: "First body-path milestone.", threshold: 100 },
-      { name: "HUNTER'S FRAME", description: "Sustained physical progression.", threshold: 500 },
-      { name: "AWAKENED VITALITY", description: "Advanced body-path milestone.", threshold: 1500 },
-    ],
-  },
-  {
-    branch: "MIND",
-    title: "FOCUS ENGINE",
-    description: "Study, intelligence, focus, and completed focus sessions advance this path.",
-    icon: Brain,
-    linkedStats: "INTELLIGENCE · FOCUS",
-    nodes: [
-      { name: "CLEAR THOUGHT", description: "First mind-path milestone.", threshold: 100 },
-      { name: "DEEP SYNCHRONY", description: "Sustained focused progression.", threshold: 500 },
-      { name: "GATE ANALYST", description: "Advanced mind-path milestone.", threshold: 1500 },
-    ],
-  },
-  {
-    branch: "WILL",
-    title: "UNBROKEN WILL",
-    description: "Discipline and consistency objectives advance this path.",
-    icon: Zap,
-    linkedStats: "DISCIPLINE · CONSISTENCY",
-    nodes: [
-      { name: "FIRST RESOLVE", description: "First will-path milestone.", threshold: 100 },
-      { name: "STEADY PULSE", description: "Sustained consistency progression.", threshold: 500 },
-      { name: "MONARCH'S GRIT", description: "Advanced will-path milestone.", threshold: 1500 },
-    ],
-  },
-];
+const branchIcons: Record<ProgressionClass, typeof Shield> = {
+  WARRIOR: Shield,
+  SCHOLAR: Brain,
+  SHADOW_HUNTER: Code2,
+  ARCHITECT: Lightbulb,
+  PHANTOM: Target,
+};
 
-export default function SkillsPage({ level, skillXP }: SkillsPageProps) {
-  const unlockedNodes = trees.reduce(
-    (total, tree) => total + tree.nodes.filter((node) => skillXP[tree.branch] >= node.threshold).length,
-    0,
-  );
-  const totalNodes = trees.reduce((total, tree) => total + tree.nodes.length, 0);
+export default function SkillsPage({
+  level,
+  skillXP,
+  skillPoints,
+  branchXP,
+  skillLevels,
+  onUnlock,
+}: SkillsPageProps) {
+  const unlockedNodes = Object.values(skillLevels).filter((rank) => rank > 0).length;
 
   return (
     <section className="skills-page panel">
       <div className="panel-corner" />
-      <div className="quest-heading">
+      <header className="quest-heading">
         <div>
           <span className="system-label">SYSTEM / SKILL TREES · HUNTER LV. {level}</span>
           <h2>SKILL PROGRESSION</h2>
         </div>
-        <span>{unlockedNodes}/{totalNodes} NODES</span>
-      </div>
+        <div className="skill-point-balance" aria-live="polite">
+          <Sparkles size={16} aria-hidden="true" />
+          <strong>{skillPoints}</strong> SKILL POINTS
+        </div>
+      </header>
       <p className="skill-tree-intro">
-        Quest rewards advance the branch linked to their target attribute. Focus-session rewards advance Mind.
-        Nodes unlock automatically at their displayed XP thresholds; no XP is spent. Branch XP starts tracking
-        after this progression update because older saves stored only total XP, not per-skill rewards.
+        Earn one skill point each time you gain a hunter level. Unlock and upgrade passives
+        with branch XP and prerequisites. A branch's passives activate while its matching
+        class is selected.
       </p>
+      <div className="skill-tree-summary">
+        <span>{unlockedNodes} / {skillNodes.length} SKILLS TRAINED</span>
+        <span>BODY {skillXP.BODY.toLocaleString()} XP</span>
+        <span>MIND {skillXP.MIND.toLocaleString()} XP</span>
+        <span>WILL {skillXP.WILL.toLocaleString()} XP</span>
+      </div>
 
       <div className="skill-trees-grid">
-        {trees.map((tree) => {
-          const Icon = tree.icon;
-          const points = skillXP[tree.branch];
+        {skillBranches.map((branch) => {
+          const Icon = branchIcons[branch.id];
+          const nodes = skillNodes.filter((node) => node.branch === branch.id);
+          const points = branchXP[branch.id];
           return (
-            <article className="skill-tree" key={tree.branch}>
+            <article className={`skill-tree skill-tree-${branch.id.toLowerCase()}`} key={branch.id}>
               <header className="skill-tree-header">
                 <div className="skill-tree-icon"><Icon size={20} /></div>
                 <div>
-                  <span>{tree.branch} PATH · {tree.linkedStats}</span>
-                  <h3>{tree.title}</h3>
+                  <span>{branch.linkedActivities}</span>
+                  <h3>{branch.title}</h3>
                 </div>
                 <strong>{points.toLocaleString()} XP</strong>
               </header>
-              <p>{tree.description}</p>
+              <p>{branch.description}</p>
               <ol className="skill-tree-nodes">
-                {tree.nodes.map((node, index) => {
-                  const unlocked = points >= node.threshold;
-                  const previousThreshold = index === 0 ? 0 : tree.nodes[index - 1].threshold;
-                  const progress = unlocked
+                {nodes.map((node, index) => {
+                  const rank = skillLevels[node.id];
+                  const reason = getSkillUnlockReason(
+                    node,
+                    skillLevels,
+                    skillPoints,
+                    level,
+                    points,
+                  );
+                  const previousThreshold = index === 0 ? 0 : nodes[index - 1].requiredBranchXP;
+                  const progress = points >= node.requiredBranchXP
                     ? 100
                     : Math.min(100, Math.max(
                       0,
-                      ((points - previousThreshold) / (node.threshold - previousThreshold)) * 100,
+                      ((points - previousThreshold)
+                        / Math.max(1, node.requiredBranchXP - previousThreshold)) * 100,
                     ));
                   return (
-                    <li className={unlocked ? "unlocked" : ""} key={node.name}>
-                      <span className="skill-node-marker">
-                        {unlocked ? <Sparkles size={13} /> : String(index + 1).padStart(2, "0")}
-                      </span>
+                    <li className={rank > 0 ? "unlocked" : ""} key={node.id}>
+                      <motion.span
+                        className="skill-node-marker"
+                        animate={rank > 0 ? { scale: [1, 1.08, 1] } : undefined}
+                        transition={{ duration: 0.35 }}
+                      >
+                        {rank > 0 ? <Sparkles size={13} /> : String(index + 1).padStart(2, "0")}
+                      </motion.span>
                       <div className="skill-node-content">
                         <div className="skill-node-heading">
                           <strong>{node.name}</strong>
-                          <span>{unlocked ? "REGISTERED" : `${node.threshold} XP`}</span>
+                          <span>{rank > 0 ? `RANK ${rank}/${node.maxLevel}` : "LOCKED"}</span>
                         </div>
                         <p>{node.description}</p>
+                        <small>{node.effect}</small>
                         <div
                           className="skill-node-track"
                           role="progressbar"
-                          aria-label={`${node.name} progress`}
+                          aria-label={`${node.name} branch requirement`}
                           aria-valuemin={0}
-                          aria-valuemax={node.threshold - previousThreshold}
-                          aria-valuenow={unlocked
-                            ? node.threshold - previousThreshold
-                            : Math.max(0, points - previousThreshold)}
+                          aria-valuemax={node.requiredBranchXP || 1}
+                          aria-valuenow={Math.min(points, node.requiredBranchXP)}
                         >
                           <span style={{ width: `${progress}%` }} />
                         </div>
+                        <div className="skill-node-requirements">
+                          <span>LV. {node.requiredLevel}</span>
+                          <span>{node.requiredBranchXP} BRANCH XP</span>
+                          <span>{rank >= node.maxLevel ? "MAXED" : `${rank + 1} SP`}</span>
+                        </div>
+                        <motion.button
+                          type="button"
+                          className="skill-unlock-button"
+                          whileHover={reason ? undefined : { scale: 1.02 }}
+                          whileTap={reason ? undefined : { scale: 0.98 }}
+                          disabled={Boolean(reason)}
+                          aria-label={rank > 0
+                            ? `Upgrade ${node.name} to rank ${rank + 1}`
+                            : `Unlock ${node.name}`}
+                          onClick={() => onUnlock(node.id)}
+                        >
+                          {reason ? reason : rank ? "UPGRADE SKILL" : "UNLOCK SKILL"}
+                        </motion.button>
                       </div>
                     </li>
                   );

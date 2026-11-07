@@ -7,13 +7,22 @@ import {
 import type {
   ActivityEvent,
   Attributes,
+  CharacterProfile,
+  ClassXP,
   FocusSession,
+  GameTransaction,
+  ProgressionClass,
   Quest,
   SkillBranch,
+  SkillLevels,
   SkillXP,
 } from "../types/game";
+import { getProgressionClass } from "./character";
+import { consumeItem, getEquippedEffects } from "./inventory";
+import { getSkillXPBonus } from "./skills";
 
 export type ProgressionState = {
+  profile: CharacterProfile;
   xp: number;
   attributes: Attributes;
   questCompletions: number;
@@ -22,6 +31,14 @@ export type ProgressionState = {
   activityLog: ActivityEvent[];
   activityDates: string[];
   skillXP: SkillXP;
+  skillPoints: number;
+  skillLevels: SkillLevels;
+  branchXP: Record<ProgressionClass, number>;
+  classXP: ClassXP;
+  gold: number;
+  inventory: { itemId: string; quantity: number }[];
+  equipment: Partial<Record<"WEAPON" | "ARMOUR" | "ACCESSORY", string>>;
+  transactions: GameTransaction[];
   recoveryDays: string[];
 }
 
@@ -29,6 +46,7 @@ export type ProgressionResult = {
   state: ProgressionState;
   granted: boolean;
   leveledUp: boolean;
+  earnedXP?: number;
 };
 
 function getLevel(xp: number) {
@@ -36,9 +54,69 @@ function getLevel(xp: number) {
 }
 
 export function getSkillBranch(attribute: Quest["attribute"]): SkillBranch {
-  if (attribute === "strength") return "BODY";
-  if (attribute === "intelligence" || attribute === "focus") return "MIND";
+  if (attribute === "strength" || attribute === "vitality") return "BODY";
+  if (attribute === "intelligence" || attribute === "focus" || attribute === "creativity") return "MIND";
   return "WILL";
+}
+
+export function getProgressionBranch(
+  attribute: Quest["attribute"],
+  questType?: string,
+): ProgressionClass {
+  const type = questType?.toUpperCase();
+  if (type === "FITNESS") return "WARRIOR";
+  if (type === "STUDY") return "SCHOLAR";
+  if (["CODING", "TECH", "CYBERSECURITY"].includes(type ?? "")) return "SHADOW_HUNTER";
+  if (type === "PROJECT") return "ARCHITECT";
+  if (attribute === "strength" || attribute === "vitality") return "WARRIOR";
+  if (attribute === "intelligence") return "SCHOLAR";
+  if (attribute === "creativity") return "ARCHITECT";
+  return "PHANTOM";
+}
+
+function getQuestRewardXP(current: ProgressionState, quest: Quest) {
+  const branch = getProgressionBranch(quest.attribute, quest.type);
+  const activeClass = getProgressionClass(current.profile.hunterClass);
+  const classBonus = branch === activeClass ? 0.1 : 0;
+  const skillBonus = branch === activeClass
+    ? getSkillXPBonus(current.skillLevels, {
+      branch,
+      attribute: quest.attribute,
+      questType: quest.type,
+    })
+    : 0;
+  const equipmentBonus = getEquippedEffects(current.equipment, {
+    attribute: quest.attribute,
+  }).xpBonus;
+  return Math.floor(quest.xp * (1 + classBonus + skillBonus + equipmentBonus));
+}
+
+function getFocusRewardXP(current: ProgressionState, session: FocusSession) {
+  const activeClass = getProgressionClass(current.profile.hunterClass);
+  const classBonus = activeClass === "PHANTOM" ? 0.1 : 0;
+  const skillBonus = activeClass === "PHANTOM"
+    ? getSkillXPBonus(current.skillLevels, {
+      branch: "PHANTOM",
+      attribute: "focus",
+      focusSession: true,
+    })
+    : 0;
+  const equipmentBonus = getEquippedEffects(current.equipment, {
+    focusSession: true,
+  }).xpBonus;
+  return Math.floor(session.xp * (1 + classBonus + skillBonus + equipmentBonus));
+}
+
+function getSkillPointsForLevelGain(currentXP: number, nextXP: number) {
+  return getLevel(nextXP) - getLevel(currentXP);
+}
+
+function addBranchXP(
+  values: Record<ProgressionClass, number>,
+  branch: ProgressionClass,
+  xp: number,
+): Record<ProgressionClass, number> {
+  return { ...values, [branch]: values[branch] + xp };
 }
 
 function createActivityEvent(
@@ -129,10 +207,12 @@ export function grantQuestReward(
     return { state: current, granted: false, leveledUp: false };
   }
 
-  const xp = current.xp + quest.xp;
+  const earnedXP = getQuestRewardXP(current, quest);
+  const xp = current.xp + earnedXP;
+  const branch = getProgressionBranch(quest.attribute, quest.type);
   const nextState = addActivity(
     current,
-    createActivityEvent("QUEST", quest.xp, date, `quest:${rewardKey}`, quest.id),
+    createActivityEvent("QUEST", earnedXP, date, `quest:${rewardKey}`, quest.id),
   );
   return {
     state: {
@@ -144,14 +224,19 @@ export function grantQuestReward(
       },
       questCompletions: current.questCompletions + 1,
       rewardedQuestPeriods: [...current.rewardedQuestPeriods, rewardKey],
+      skillPoints: current.skillPoints + getSkillPointsForLevelGain(current.xp, xp),
+      gold: current.gold + Math.floor(earnedXP / 20),
+      branchXP: addBranchXP(current.branchXP, branch, earnedXP),
+      classXP: addBranchXP(current.classXP, branch, earnedXP),
       skillXP: {
         ...current.skillXP,
         [getSkillBranch(quest.attribute)]:
-          current.skillXP[getSkillBranch(quest.attribute)] + quest.xp,
+          current.skillXP[getSkillBranch(quest.attribute)] + earnedXP,
       },
     },
     granted: true,
     leveledUp: getLevel(xp) > getLevel(current.xp),
+    earnedXP,
   };
 }
 
@@ -163,12 +248,14 @@ export function grantFocusSessionReward(
     return { state: current, granted: false, leveledUp: false };
   }
 
-  const xp = current.xp + session.xp;
+  const earnedXP = getFocusRewardXP(current, session);
+  const xp = current.xp + earnedXP;
+  const branch = "PHANTOM";
   const nextState = addActivity(
     current,
     createActivityEvent(
       "FOCUS",
-      session.xp,
+      earnedXP,
       new Date(session.completedAt),
       `focus:${session.id}`,
     ),
@@ -178,13 +265,50 @@ export function grantFocusSessionReward(
       ...nextState,
       xp,
       focusSessions: [...current.focusSessions, session].slice(-500),
+      skillPoints: current.skillPoints + getSkillPointsForLevelGain(current.xp, xp),
+      gold: current.gold + Math.floor(earnedXP / 20),
+      branchXP: addBranchXP(current.branchXP, branch, earnedXP),
+      classXP: addBranchXP(current.classXP, branch, earnedXP),
       skillXP: {
         ...current.skillXP,
-        MIND: current.skillXP.MIND + session.xp,
+        MIND: current.skillXP.MIND + earnedXP,
       },
     },
     granted: true,
     leveledUp: getLevel(xp) > getLevel(current.xp),
+    earnedXP,
+  };
+}
+
+export function grantItemUse(
+  current: ProgressionState,
+  itemId: string,
+  transactionId: string,
+  occurredAt = new Date(),
+): ProgressionResult {
+  const result = consumeItem(current, itemId, transactionId, occurredAt);
+  if (!result.success || result.xp === undefined) {
+    return { state: current, granted: false, leveledUp: false };
+  }
+  const xp = current.xp + result.xp;
+  const event = createActivityEvent(
+    "SYSTEM_REWARD",
+    result.xp,
+    occurredAt,
+    `item-use:${transactionId}`,
+  );
+  const state = {
+    ...result.state,
+    xp,
+    attributes: { ...current.attributes, focus: current.attributes.focus + 1 },
+    activityLog: [...current.activityLog, event].slice(-2000),
+    skillPoints: current.skillPoints + getSkillPointsForLevelGain(current.xp, xp),
+  };
+  return {
+    state,
+    granted: true,
+    leveledUp: getLevel(xp) > getLevel(current.xp),
+    earnedXP: result.xp,
   };
 }
 

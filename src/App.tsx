@@ -11,6 +11,7 @@ import {
 import type { Page } from "./components/SystemNav";
 import SystemHeader from "./components/SystemHeader";
 import SystemSidebar from "./components/SystemSidebar";
+import CharacterPage from "./components/CharacterPage";
 import QuestBoard from "./components/QuestBoard";
 import SkillsPage from "./components/SkillsPage";
 import AchievementsPage from "./components/AchievementsPage";
@@ -21,6 +22,7 @@ import AnalyticsPage from "./components/AnalyticsPage";
 import StreakCard from "./components/StreakCard";
 import { useAwakenGame } from "./hooks/useAwakenGame";
 import { getRank } from "./game/gameData";
+import { getCharacterInitials } from "./game/character";
 
 const bootMessages = [
   "ESTABLISHING SYSTEM CONNECTION...",
@@ -40,7 +42,7 @@ function App() {
     activityLog,
     addCustomCategory,
     allQuests,
-    attributes,
+    characterProfile,
     completeFocusSession,
     completeQuest,
     customCategories,
@@ -66,6 +68,7 @@ function App() {
     soundEnabled,
     storageWarning,
     toggleSound,
+    updateCharacterProfile,
     xp,
     xpPercentage,
   } = game;
@@ -297,11 +300,11 @@ function App() {
               <h2>LEVEL UP</h2>
 
               <div className="level-number">
-                {String(level - 1).padStart(2, "0")}
+                {String(levelUp.from).padStart(2, "0")}
 
                 <span>→</span>
 
-                {String(level).padStart(2, "0")}
+                {String(levelUp.to).padStart(2, "0")}
               </div>
 
               <p>
@@ -317,6 +320,7 @@ function App() {
           activePage={activePage}
           level={level}
           rank={getRank(level)}
+          hunterName={characterProfile.name}
           setActivePage={setActivePage}
         />
 
@@ -334,7 +338,7 @@ function App() {
             time={systemTime}
           />
 
-        <div className="system-content">
+        <div className={`system-content system-content-${activePage.toLowerCase()}`}>
 
         <AnimatePresence mode="wait">
 
@@ -359,7 +363,7 @@ function App() {
                 duration: 0.25,
               }}
             >
-              <section className="main-grid">
+              <section className="main-grid system-dashboard">
                 <motion.section
                   className="mission-console panel"
                   initial={{ opacity: 0, y: 12 }}
@@ -501,12 +505,12 @@ function App() {
                       }}
                       className="player-emblem"
                     >
-                      S
+                      {getCharacterInitials(characterProfile.name)}
                     </motion.div>
 
                     <div className="player-name">
                       <span>PLAYER</span>
-                      <h2>SAM</h2>
+                      <h2>                      {characterProfile.name}</h2>
                     </div>
 
                   </div>
@@ -565,32 +569,42 @@ function App() {
 
                     <Attribute
                       name="STRENGTH"
-                      value={attributes.strength}
+                      value={game.effectiveAttributes.strength}
                     />
 
                     <Attribute
                       name="INTELLIGENCE"
                       value={
-                        attributes.intelligence
+                        game.effectiveAttributes.intelligence
                       }
+                    />
+
+                    <Attribute
+                      name="VITALITY"
+                      value={game.effectiveAttributes.vitality}
                     />
 
                     <Attribute
                       name="DISCIPLINE"
                       value={
-                        attributes.discipline
+                        game.effectiveAttributes.discipline
                       }
                     />
 
                     <Attribute
+                      name="CREATIVITY"
+                      value={game.effectiveAttributes.creativity}
+                    />
+
+                    <Attribute
                       name="FOCUS"
-                      value={attributes.focus}
+                      value={game.effectiveAttributes.focus}
                     />
 
                     <Attribute
                       name="CONSISTENCY"
                       value={
-                        attributes.consistency
+                        game.effectiveAttributes.consistency
                       }
                     />
 
@@ -707,6 +721,40 @@ function App() {
             </motion.div>
           )}
 
+          {activePage === "CHARACTER" && (
+            <motion.div
+              key="character"
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -12 }}
+              transition={{ duration: 0.25 }}
+            >
+              <div className="main-grid page-grid page-grid-character">
+                <CharacterPage
+                  profile={characterProfile}
+                  attributes={game.effectiveAttributes}
+                  level={level}
+                  rank={getRank(level)}
+                  xp={xp}
+                  currentLevelXP={currentLevelXP}
+                  xpPercentage={xpPercentage}
+                  questCompletions={questCompletions}
+                  classXP={game.classXP}
+                  skillLevels={game.skillLevels}
+                  equipmentNames={Object.fromEntries(
+                    Object.entries(game.equipment).map(([slot, itemId]) => [
+                      slot,
+                      game.inventory.find((item) => item.itemId === itemId)
+                        ? itemId?.replaceAll("-", " ").toUpperCase()
+                        : undefined,
+                    ]),
+                  )}
+                  onSave={updateCharacterProfile}
+                />
+              </div>
+            </motion.div>
+          )}
+
           {/* QUESTS */}
 
           {activePage === "QUESTS" && (
@@ -728,7 +776,7 @@ function App() {
                 duration: 0.25,
               }}
             >
-              <div className="main-grid">
+              <div className="main-grid page-grid page-grid-quests">
 <div className="daily-system-header">
   <div>
     <span className="system-label">
@@ -796,7 +844,7 @@ function App() {
               exit={{ opacity: 0, y: -12 }}
               transition={{ duration: 0.25 }}
             >
-              <div className="main-grid">
+              <div className="main-grid page-grid page-grid-analytics">
                 <AnalyticsPage
                   activityLog={activityLog}
                   focusSessions={game.focusSessions}
@@ -826,10 +874,14 @@ function App() {
                 duration: 0.25,
               }}
             >
-              <div className="main-grid">
+              <div className="main-grid page-grid page-grid-skills">
                 <SkillsPage
                   level={level}
                   skillXP={game.skillXP}
+                  skillPoints={game.skillPoints}
+                  branchXP={game.branchXP}
+                  skillLevels={game.skillLevels}
+                  onUnlock={game.unlockSkill}
                 />
               </div>
             </motion.div>
@@ -856,7 +908,7 @@ function App() {
                 duration: 0.25,
               }}
             >
-              <div className="main-grid">
+              <div className="main-grid page-grid page-grid-achievements">
 
                 <AchievementsPage
                   level={level}
@@ -888,10 +940,18 @@ function App() {
                 duration: 0.25,
               }}
             >
-              <div className="main-grid">
+              <div className="main-grid page-grid page-grid-inventory">
 
                 <InventoryPage
                   level={level}
+                  gold={game.gold}
+                  inventory={game.inventory}
+                  equipment={game.equipment}
+                  transactions={game.transactions}
+                  onPurchase={game.purchaseInventoryItem}
+                  onEquip={game.equipItem}
+                  onUnequip={game.unequipItem}
+                  onUse={game.useInventoryItem}
                 />
 
               </div>
@@ -901,7 +961,7 @@ function App() {
         </AnimatePresence>
 
         <div
-          className="main-grid focus-page-shell"
+          className="main-grid page-grid page-grid-focus focus-page-shell"
           hidden={activePage !== "FOCUS"}
         >
           <FocusPage

@@ -12,10 +12,18 @@ import type {
 export const defaultAttributes: Attributes = {
   strength: 1,
   intelligence: 1,
+  vitality: 1,
   discipline: 1,
+  creativity: 1,
   focus: 1,
   consistency: 1,
 };
+
+export const defaultCharacterProfile = {
+  name: "SAM",
+  hunterClass: "VANGUARD",
+  specialization: "WARDEN",
+} as const;
 
 export const dailyQuests: Quest[] = [
   {
@@ -112,12 +120,12 @@ export function getDefaultAttribute(type?: string): Attribute {
     case "FITNESS":
       return "strength";
     case "STUDY":
-    case "CODING":
       return "intelligence";
+    case "CODING":
+    case "PROJECT":
+      return "creativity";
     case "DAILY":
       return "discipline";
-    case "PROJECT":
-      return "focus";
     default:
       return "consistency";
   }

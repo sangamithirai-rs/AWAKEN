@@ -4,20 +4,31 @@ import {
   getLevelProgress,
   advanceBossQuest,
   grantFocusSessionReward,
+  grantItemUse,
   grantQuestReward,
   getRecoveryStatus,
   getStreakProgress,
   getWeeklyStreakProgress,
   type ProgressionState,
 } from "./progression";
+import { createEmptyEquipment } from "./inventory";
+import { createEmptySkillLevels } from "./skills";
+import { unlockSkill } from "./skills";
 import type { FocusSession, Quest } from "../types/game";
 
 const initialState: ProgressionState = {
+  profile: {
+    name: "SAM",
+    hunterClass: "VANGUARD",
+    specialization: "WARDEN",
+  },
   xp: 0,
   attributes: {
     strength: 1,
     intelligence: 1,
+    vitality: 1,
     discipline: 1,
+    creativity: 1,
     focus: 1,
     consistency: 1,
   },
@@ -27,6 +38,26 @@ const initialState: ProgressionState = {
   activityLog: [],
   activityDates: [],
   skillXP: { BODY: 0, MIND: 0, WILL: 0 },
+  skillPoints: 0,
+  skillLevels: createEmptySkillLevels(),
+  branchXP: {
+    WARRIOR: 0,
+    SCHOLAR: 0,
+    SHADOW_HUNTER: 0,
+    ARCHITECT: 0,
+    PHANTOM: 0,
+  },
+  classXP: {
+    WARRIOR: 0,
+    SCHOLAR: 0,
+    SHADOW_HUNTER: 0,
+    ARCHITECT: 0,
+    PHANTOM: 0,
+  },
+  gold: 0,
+  inventory: [],
+  equipment: createEmptyEquipment(),
+  transactions: [],
   recoveryDays: [],
 };
 
@@ -62,6 +93,15 @@ describe("progression", () => {
     });
   });
 
+  it("supports rewards that cross multiple level thresholds", () => {
+    const quest = { ...makeQuest("ONCE"), xp: 3000 };
+    const result = grantQuestReward(initialState, quest, new Date(2026, 3, 10, 12));
+    expect(result.leveledUp).toBe(true);
+    expect(getLevelProgress(result.state.xp).level).toBe(4);
+    expect(result.state.skillPoints).toBe(3);
+    expect(result.state.gold).toBeGreaterThan(0);
+  });
+
   it("grants a daily quest reward only once per local day", () => {
     const quest = makeQuest("DAILY");
     const date = new Date(2026, 3, 10, 12);
@@ -77,6 +117,9 @@ describe("progression", () => {
     expect(repeated.granted).toBe(false);
     expect(nextDay.granted).toBe(true);
     expect(nextDay.state.xp).toBe(200);
+    expect(first.state.gold).toBe(5);
+    expect(repeated.state.gold).toBe(5);
+    expect(nextDay.state.gold).toBe(10);
   });
 
   it("uses Monday as the start of the weekly quest period", () => {
@@ -107,6 +150,7 @@ describe("progression", () => {
     });
     const first = grantFocusSessionReward(initialState, makeSession("session-0"));
     expect(grantFocusSessionReward(first.state, makeSession("session-0")).granted).toBe(false);
+    expect(first.state.gold).toBe(2);
 
     const sessions = Array.from({ length: 501 }, (_, index) => makeSession(`session-${index}`));
     const result = sessions.reduce(
@@ -128,9 +172,85 @@ describe("progression", () => {
       xp: 50,
       completedAt: "2026-04-10T12:00:00.000Z",
     });
-
-    expect(questResult.state.skillXP.BODY).toBe(100);
+    expect(questResult.state.skillXP.BODY).toBe(110);
     expect(focusResult.state.skillXP.MIND).toBe(50);
+  });
+
+  it("uses skill ranks, class, and equipment to increase matching quest rewards", () => {
+    const skillResult = unlockSkill(
+      { ...initialState, skillPoints: 2 },
+      "WARRIOR_FOUNDATION",
+    );
+    expect(skillResult.success).toBe(true);
+    expect(skillResult.state.skillPoints).toBe(1);
+
+    const equipped = {
+      ...skillResult.state,
+      inventory: [{ itemId: "training-blade", quantity: 1 }],
+      equipment: { WEAPON: "training-blade" },
+    };
+    const reward = grantQuestReward(
+      equipped,
+      { ...makeQuest("ONCE"), attribute: "strength" },
+      new Date(2026, 3, 10, 12),
+    );
+    expect(reward.earnedXP).toBe(120);
+    expect(reward.state.xp).toBe(120);
+    expect(reward.state.branchXP.WARRIOR).toBe(120);
+  });
+
+  it("rejects skill upgrades without requirements or points", () => {
+    const locked = unlockSkill(initialState, "WARRIOR_FOUNDATION");
+    expect(locked.success).toBe(false);
+    expect(locked.reason).toContain("SKILL POINT");
+
+    const missingPrerequisite = unlockSkill(
+      {
+        ...initialState,
+        xp: 9000,
+        skillPoints: 3,
+        branchXP: { ...initialState.branchXP, WARRIOR: 1000 },
+      },
+      "WARRIOR_MASTERY",
+    );
+    expect(missingPrerequisite.success).toBe(false);
+    expect(missingPrerequisite.reason).toContain("IRON RHYTHM");
+  });
+
+  it("consumes a tonic once and applies its XP and focus effect", () => {
+    const state = {
+      ...initialState,
+      inventory: [{ itemId: "clarity-tonic", quantity: 1 }],
+    };
+    const used = grantItemUse(state, "clarity-tonic", "use:tonic-1");
+    const duplicate = grantItemUse(used.state, "clarity-tonic", "use:tonic-1");
+    expect(used.granted).toBe(true);
+    expect(used.state.xp).toBe(100);
+    expect(used.state.attributes.focus).toBe(2);
+    expect(used.state.inventory).toEqual([]);
+    expect(used.state.activityDates).toEqual([]);
+    expect(duplicate.granted).toBe(false);
+    expect(duplicate.state.xp).toBe(100);
+  });
+
+  it("progresses vitality and creativity when quests target those stats", () => {
+    const vitalityQuest = {
+      ...makeQuest("ONCE"),
+      id: "vitality-quest",
+      attribute: "vitality" as const,
+    };
+    const creativityQuest = {
+      ...makeQuest("ONCE"),
+      id: "creativity-quest",
+      attribute: "creativity" as const,
+    };
+    const vitalityResult = grantQuestReward(initialState, vitalityQuest);
+    const creativityResult = grantQuestReward(vitalityResult.state, creativityQuest);
+
+    expect(creativityResult.state.attributes.vitality).toBe(2);
+    expect(creativityResult.state.attributes.creativity).toBe(2);
+    expect(creativityResult.state.skillXP.BODY).toBe(110);
+    expect(creativityResult.state.skillXP.MIND).toBe(100);
   });
 
   it("grants recovery charges for seven distinct active days and restores one missed day", () => {
