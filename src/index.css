@@ -2267,7 +2267,6 @@ body,
 .system-content-system {
   overflow-y: auto !important;
   overscroll-behavior: contain;
-  scrollbar-gutter: stable;
 }
 
 .system-content-system > div {
@@ -2489,7 +2488,6 @@ body,
 .character-tab-panel {
   overflow-y: auto;
   overscroll-behavior: contain;
-  scrollbar-gutter: stable;
 }
 
 .character-tab-panel .character-stat-grid {
@@ -2601,7 +2599,6 @@ body,
   flex: 1 1 auto;
   overflow-y: auto;
   overscroll-behavior: contain;
-  scrollbar-gutter: stable;
 }
 
 .page-grid-quests .quest-card {
@@ -2665,7 +2662,6 @@ body,
   grid-template-columns: repeat(5, minmax(230px, 1fr));
   overflow: auto;
   overscroll-behavior: contain;
-  scrollbar-gutter: stable;
 }
 
 .page-grid-skills .skill-tree {
@@ -2704,7 +2700,6 @@ body,
   min-height: 0;
   overflow-y: auto;
   overscroll-behavior: contain;
-  scrollbar-gutter: stable;
 }
 
 .inventory-loadout-layout .equipment-slots {
@@ -9969,6 +9964,131 @@ button:disabled {
   }
 }
 
+.orientation-overlay {
+  display: none;
+}
+
+@media (orientation: portrait) {
+  .orientation-overlay {
+    position: fixed;
+    z-index: 10000;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 12px;
+    overflow: hidden;
+    padding:
+      max(24px, env(safe-area-inset-top))
+      max(24px, env(safe-area-inset-right))
+      max(24px, env(safe-area-inset-bottom))
+      max(24px, env(safe-area-inset-left));
+    background:
+      radial-gradient(ellipse at 50% 40%, rgba(52, 126, 223, 0.18), transparent 38%),
+      linear-gradient(160deg, #090e1b 0%, #03050b 72%);
+    color: #eff7ff;
+    text-align: center;
+  }
+
+  .orientation-overlay::before,
+  .orientation-overlay::after {
+    position: absolute;
+    width: min(78vw, 560px);
+    height: 1px;
+    content: "";
+    background: linear-gradient(90deg, transparent, rgba(91, 188, 255, 0.5), transparent);
+  }
+
+  .orientation-overlay::before {
+    top: 20%;
+  }
+
+  .orientation-overlay::after {
+    bottom: 20%;
+  }
+
+  .orientation-energy {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+      linear-gradient(115deg, transparent 35%, rgba(79, 169, 255, 0.035) 50%, transparent 65%),
+      repeating-linear-gradient(0deg, transparent 0 42px, rgba(86, 155, 255, 0.025) 43px 44px);
+  }
+
+  .orientation-device {
+    position: relative;
+    display: grid;
+    width: 92px;
+    height: 92px;
+    place-items: center;
+    margin-bottom: 5px;
+    border: 1px solid rgba(115, 192, 255, 0.28);
+    border-radius: 22px;
+    color: #9cddff;
+    background: rgba(25, 67, 118, 0.14);
+    box-shadow: 0 0 42px rgba(58, 153, 244, 0.12), inset 0 0 26px rgba(68, 153, 241, 0.08);
+  }
+
+  .orientation-rotate {
+    position: absolute;
+    right: -9px;
+    bottom: -7px;
+    color: #d3efff;
+    filter: drop-shadow(0 0 8px rgba(83, 188, 255, 0.7));
+    animation: orientation-turn 2.4s ease-in-out infinite;
+  }
+
+  .orientation-label {
+    position: relative;
+    color: rgba(135, 193, 237, 0.68);
+    font-family: "JetBrains Mono", monospace;
+    font-size: 9px;
+    letter-spacing: 0.18em;
+  }
+
+  .orientation-overlay h1 {
+    position: relative;
+    margin: 0;
+    font-family: "Orbitron", sans-serif;
+    font-size: clamp(20px, 5vw, 32px);
+    letter-spacing: 0.1em;
+    text-shadow: 0 0 24px rgba(75, 171, 255, 0.28);
+  }
+
+  .orientation-overlay p {
+    position: relative;
+    margin: 0;
+    color: rgba(192, 213, 237, 0.66);
+    font-family: "Rajdhani", sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+  }
+}
+
+@keyframes orientation-turn {
+  0%, 15% {
+    transform: rotate(0deg);
+  }
+
+  55%, 80% {
+    transform: rotate(90deg);
+  }
+
+  100% {
+    transform: rotate(90deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .orientation-rotate {
+    animation: none;
+    transform: rotate(45deg);
+  }
+}
+
 @media (max-width: 900px) {
   .page-grid-quests {
     grid-template-columns: minmax(0, 1fr);
@@ -10075,168 +10195,3151 @@ button:disabled {
   }
 }
 
-/* Keep every section reachable when its content exceeds the viewport. */
-.system-main .system-content {
+/* Keep long tab content reachable inside the existing viewport-sized panels. */
+.system-content-system .system-dashboard .mission-console,
+.system-content-system .system-dashboard .player-status,
+.system-content-system .system-dashboard .quests,
+.system-content-system .system-dashboard .streak-card,
+.system-content-system .system-dashboard .objectives {
+  min-width: 0;
+  min-height: 0;
+  overscroll-behavior: contain;
+}
+
+.page-grid-character > .character-page,
+.page-grid-analytics > .analytics-page,
+.page-grid-skills > .skills-page,
+.page-grid-achievements > .achievements-page,
+.page-grid-inventory > .inventory-page,
+.page-grid-focus > .focus-page {
   overflow-x: hidden;
   overflow-y: auto;
   overscroll-behavior: contain;
-  scrollbar-gutter: stable;
-}
-
-.system-content > div:not(.focus-page-shell) {
-  height: auto;
-  min-height: 100%;
-  flex: 0 0 auto;
-  overflow: visible;
-}
-
-.system-content > div:not(.focus-page-shell) > .page-grid,
-.system-content > .focus-page-shell {
-  height: auto;
-  min-height: 100%;
-  overflow: visible;
-}
-
-.system-content-system {
-  overflow-x: hidden;
-  overflow-y: auto !important;
-}
-
-.system-content-system > div {
-  height: auto;
-  min-height: 100%;
-  flex: 0 0 auto;
-}
-
-.system-content-system .system-dashboard {
-  height: auto;
-  min-height: 100%;
-  grid-template-rows: minmax(220px, auto) minmax(240px, auto);
-  overflow: visible;
-}
-
-.page-grid {
-  height: auto;
-  min-height: 100%;
-  overflow: visible;
-}
-
-.page-grid > .panel,
-.page-grid > .character-page,
-.page-grid > .quests,
-.page-grid > .analytics-page,
-.page-grid > .skills-page,
-.page-grid > .achievements-page,
-.page-grid > .inventory-page,
-.page-grid > .focus-page {
-  height: auto;
-  max-height: none;
-  overflow: visible;
-}
-
-.page-grid-quests .quest-card {
-  flex: 0 0 auto;
 }
 
 .page-grid-quests .quest-info > p {
   display: block;
   overflow: visible;
-}
-
-.page-grid-skills .skill-trees-grid {
-  flex: 0 0 auto;
-  overflow-x: auto;
-  overflow-y: visible;
-}
-
-.page-grid-skills .skill-tree {
-  height: auto;
-}
-
-.page-grid-skills .skill-tree-nodes {
-  overflow-y: visible;
-}
-
-.page-grid-achievements .achievements-grid {
-  flex: 0 0 auto;
-  overflow: visible;
-}
-
-.page-grid-achievements .achievement-card {
-  overflow: visible;
+  -webkit-line-clamp: unset;
 }
 
 .page-grid-achievements .achievement-card p {
   display: block;
   overflow: visible;
+  -webkit-line-clamp: unset;
 }
 
 .page-grid-inventory .inventory-loadout-layout {
-  flex: 0 0 auto;
-  overflow: visible;
+  overflow-y: auto;
 }
 
-.page-grid-inventory .inventory-loadout-layout .equipment-loadout,
-.page-grid-inventory .inventory-loadout-layout .owned-inventory {
-  overflow: visible;
-}
-
-.page-grid-analytics .analytics-chart {
-  min-height: 320px;
-  flex: 0 0 auto;
-  overflow: visible;
-}
-
-.page-grid-focus .focus-page {
-  grid-template-rows: auto auto auto auto auto auto;
-}
-
-@media (max-width: 1100px) {
-  .system-content-system .system-dashboard {
-    grid-template-rows: minmax(220px, auto) minmax(220px, auto) minmax(220px, auto);
-  }
-}
-
-@media (max-width: 900px) {
-  .page-grid-quests {
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: auto auto auto;
+@media (max-height: 500px) {
+  .system-main > .system-header {
+    display: grid;
+    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.35fr) auto;
+    grid-template-rows: minmax(0, 1fr);
+    gap: 5px;
   }
 
-  .page-grid-quests > .daily-system-header {
+  .system-main > .system-header .header-context {
     grid-column: 1;
     grid-row: 1;
   }
 
-  .page-grid-quests > .create-quest-button,
-  .page-grid-quests > .create-quest {
-    grid-column: 1;
-    grid-row: 2;
+  .system-main .header-metrics {
+    display: grid;
+    grid-column: 2;
+    grid-row: 1;
+    min-width: 0;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 3px;
   }
 
-  .page-grid-quests > .quests {
-    grid-column: 1;
-    grid-row: 3;
-    max-height: none;
+  .system-main > .system-header .sound-toggle {
+    grid-column: 3;
+    grid-row: 1;
+  }
+
+  .system-main .metric-card {
+    min-width: 0;
+    padding: 3px 4px;
+  }
+
+  .system-main .metric-card span {
+    font-size: 5px;
+    letter-spacing: 0.03em;
+  }
+
+  .system-main .metric-card strong {
+    font-size: 8px;
+  }
+
+  .page-grid-focus .focus-header p,
+  .page-grid-analytics .analytics-chart-heading > span,
+  .page-grid-analytics .analytics-day > small,
+  .page-grid-analytics .analytics-note {
+    display: block;
+  }
+
+  .page-grid-analytics .analytics-data-notice p {
+    display: block;
     overflow: visible;
+    -webkit-line-clamp: unset;
+  }
+}
+
+.page-grid-quests .quest-reward {
+  display: flex;
+}
+
+.page-grid-inventory .inventory-empty {
+  min-height: 0;
+}
+
+.system-content-system {
+  overflow: hidden !important;
+}
+
+.system-content-system > div {
+  height: 100%;
+  min-height: 0;
+}
+
+.system-dashboard {
+  grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
+  grid-template-rows: minmax(0, 1fr);
+  gap: 10px;
+}
+
+.dashboard-primary-column,
+.dashboard-secondary-column {
+  display: grid;
+  min-width: 0;
+  min-height: 0;
+  gap: 10px;
+}
+
+.dashboard-primary-column {
+  grid-template-rows: minmax(0, 0.9fr) minmax(0, 1.1fr);
+}
+
+.dashboard-secondary-column {
+  grid-template-rows: minmax(0, 1fr) minmax(0, 0.72fr);
+}
+
+.dashboard-primary-column > .mission-console {
+  grid-column: auto;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.system-dashboard .mission-console .mission-console-top {
+  min-height: 30px;
+  padding-inline: 12px;
+}
+
+.system-dashboard .mission-console .mission-console-body {
+  height: calc(100% - 30px);
+  min-height: 0;
+  grid-template-columns: minmax(0, 1.15fr) minmax(145px, 0.85fr);
+}
+
+.system-dashboard .mission-console .mission-contract {
+  min-width: 0;
+  padding: 10px 14px;
+}
+
+.system-dashboard .mission-console .mission-contract h2 {
+  margin: 5px 0;
+  font-size: clamp(16px, 1.7vw, 22px);
+}
+
+.system-dashboard .mission-console .mission-contract p {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  font-size: 9px;
+  line-height: 1.4;
+}
+
+.system-dashboard .mission-console .mission-contract-footer {
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.system-dashboard .mission-console .mission-clearance {
+  min-width: 0;
+  padding: 12px;
+}
+
+.dashboard-primary-column > .player-status {
+  padding: 12px;
+  overflow: hidden;
+}
+
+.system-dashboard .player-status .player-core {
+  gap: 8px;
+}
+
+.system-dashboard .player-status .player-emblem {
+  width: 42px;
+  height: 42px;
+}
+
+.system-dashboard .player-status .level-display {
+  margin-block: 8px;
+}
+
+.system-dashboard .player-status .xp-section {
+  margin-bottom: 8px;
+}
+
+.system-dashboard .player-status .attributes {
+  display: grid;
+  min-height: 0;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px 8px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.system-dashboard .player-status .attributes .section-label {
+  grid-column: 1 / -1;
+}
+
+.dashboard-secondary-column > .quests {
+  overflow-y: auto;
+}
+
+.dashboard-support-row {
+  display: grid;
+  min-width: 0;
+  min-height: 0;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  gap: 10px;
+}
+
+.dashboard-support-row > .streak-card,
+.dashboard-support-row > .objectives {
+  min-width: 0;
+  min-height: 0;
+  grid-column: auto;
+  grid-row: auto;
+  padding: 12px;
+  overflow-y: auto;
+}
+
+.dashboard-support-row > .streak-card {
+  justify-content: center;
+  gap: 8px;
+}
+
+.dashboard-support-row .objectives .section-label {
+  margin-bottom: 8px;
+}
+
+.dashboard-support-row .objective {
+  margin-top: 8px;
+}
+
+.dashboard-support-row .objective > div:first-child {
+  margin-bottom: 4px;
+}
+
+.dashboard-support-row .system-tip {
+  gap: 7px;
+  margin-top: 12px;
+  padding-top: 8px;
+}
+
+.dashboard-support-row .system-tip p {
+  font-size: 8px;
+  line-height: 1.4;
+}
+
+.dashboard-support-row > .streak-card .streak-icon {
+  width: 30px;
+  height: 30px;
+}
+
+.dashboard-support-row > .streak-card .streak-readout > strong {
+  font-size: 32px;
+}
+
+@media (max-width: 1100px) {
+  .system-dashboard {
+    grid-template-columns: minmax(0, 0.88fr) minmax(0, 1.12fr);
+    gap: 8px;
   }
 
-  .page-grid-quests > .quests .quest-list {
-    flex: 0 0 auto;
-    overflow: visible;
+  .dashboard-primary-column,
+  .dashboard-secondary-column,
+  .dashboard-support-row {
+    gap: 8px;
   }
 
-  .page-grid-inventory .inventory-loadout-layout {
-    grid-template-columns: minmax(0, 1fr);
+  .dashboard-primary-column {
+    grid-template-rows: minmax(0, 0.85fr) minmax(0, 1.15fr);
+  }
+
+  .dashboard-secondary-column {
+    grid-template-rows: minmax(0, 1fr) minmax(0, 0.7fr);
+  }
+
+  .dashboard-support-row {
+    grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+  }
+
+  .dashboard-primary-column > .player-status,
+  .dashboard-support-row > .streak-card,
+  .dashboard-support-row > .objectives {
+    padding: 9px;
   }
 }
 
 @media (max-width: 760px) {
-  .system-content-system .system-dashboard {
-    grid-template-rows: minmax(220px, auto) minmax(190px, auto) minmax(190px, auto);
+  .system-dashboard {
+    gap: 6px;
   }
 
-  .page-grid-skills .skill-trees-grid {
-    grid-template-columns: repeat(5, minmax(230px, 1fr));
+  .dashboard-primary-column,
+  .dashboard-secondary-column,
+  .dashboard-support-row {
+    gap: 6px;
+  }
+
+  .dashboard-primary-column {
+    grid-template-rows: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  }
+
+  .dashboard-secondary-column {
+    grid-template-rows: minmax(0, 1fr) minmax(0, 0.72fr);
+  }
+
+  .dashboard-support-row {
+    grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .system-dashboard .mission-console .mission-console-top {
+    min-height: 24px;
+    padding-inline: 8px;
+  }
+
+  .system-dashboard .mission-console .mission-console-body {
+    height: calc(100% - 24px);
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) auto;
+  }
+
+  .system-dashboard .mission-console .mission-contract {
+    justify-content: flex-start;
+    padding: 8px;
+  }
+
+  .system-dashboard .mission-console .mission-contract h2 {
+    margin: 3px 0;
+    font-size: 14px;
+  }
+
+  .system-dashboard .mission-console .mission-contract p {
+    -webkit-line-clamp: 1;
+  }
+
+  .system-dashboard .mission-console .mission-contract-footer {
+    gap: 5px;
+    margin-top: 4px;
+  }
+
+  .system-dashboard .mission-console .mission-clearance {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: center;
+    gap: 5px 8px;
+    padding: 6px 8px;
+  }
+
+  .system-dashboard .mission-console .clearance-heading,
+  .system-dashboard .mission-console .clearance-track {
+    grid-column: 1 / -1;
+  }
+
+  .system-dashboard .mission-console .mission-xp {
+    margin: 0;
+  }
+
+  .dashboard-support-row > .streak-card h3 {
+    font-size: 9px;
+  }
+
+  .dashboard-support-row > .streak-card .system-label {
+    font-size: 6px;
+  }
+
+  .dashboard-support-row > .streak-card .streak-readout,
+  .dashboard-support-row > .streak-card .weekly-streak-readout {
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  .dashboard-support-row > .streak-card > p {
+    font-size: 7px;
+    line-height: 1.35;
+  }
+
+  .system-dashboard .player-status .attributes {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2px;
+  }
+}
+
+@media (max-height: 500px) {
+  .system-sidebar .sidebar-brand,
+  .system-sidebar .sidebar-section-label,
+  .system-sidebar .sidebar-hunter-card {
+    display: none;
+  }
+
+  .system-sidebar .system-nav {
+    width: 100%;
+    flex: 1 1 auto;
+  }
+
+  .system-dashboard {
+    gap: 6px;
+  }
+
+  .dashboard-primary-column,
+  .dashboard-secondary-column,
+  .dashboard-support-row {
+    gap: 6px;
+  }
+
+  .dashboard-primary-column {
+    grid-template-rows: minmax(0, 1.1fr) minmax(0, 0.9fr);
+  }
+
+  .dashboard-secondary-column {
+    grid-template-rows: minmax(0, 0.9fr) minmax(0, 0.85fr);
+  }
+
+  .dashboard-primary-column > .player-status,
+  .dashboard-support-row > .streak-card,
+  .dashboard-support-row > .objectives {
+    padding: 7px;
+  }
+
+  .dashboard-primary-column > .player-status {
+    overflow-y: auto;
+  }
+
+  .system-dashboard .player-status .attributes {
+    overflow: visible;
+  }
+
+  .system-dashboard .mission-console .mission-contract {
+    justify-content: center;
+    padding-block: 0;
+  }
+
+  .system-dashboard .mission-console .mission-contract h2 {
+    margin-block: 0;
+    font-size: clamp(12px, 1.3vw, 16px);
+  }
+
+  .system-dashboard .mission-console .mission-contract p {
+    -webkit-line-clamp: 1;
+    font-size: 8px;
+    line-height: 1.2;
+  }
+
+  .system-dashboard .mission-console .mission-contract-footer {
+    align-items: center;
+    justify-content: space-between;
+    gap: 4px;
+    margin-top: 0;
+  }
+
+  .system-dashboard .mission-console .mission-clearance {
+    gap: 4px;
+    padding: 6px;
+  }
+
+  .system-dashboard .mission-console .clearance-heading strong {
+    font-size: 14px;
+  }
+
+  .system-dashboard .mission-console .clearance-track {
+    height: 4px;
+    margin-top: 4px;
+  }
+
+  .system-dashboard .mission-console .clearance-count {
+    gap: 3px;
+    margin-top: 4px;
+  }
+
+  .system-dashboard .mission-console .mission-xp {
+    gap: 0 5px;
+    margin-top: 6px;
+  }
+
+  .system-dashboard .mission-console .mission-xp-track {
+    height: 3px;
+    margin-top: 4px;
+  }
+
+  .dashboard-support-row > .streak-card {
+    gap: 3px;
+  }
+
+  .dashboard-support-row > .streak-card .streak-icon {
+    width: 24px;
+    height: 24px;
+  }
+
+  .dashboard-support-row > .streak-card .streak-readout > strong {
+    font-size: 22px;
+  }
+
+  .dashboard-support-row > .streak-card .weekly-streak-readout > strong {
+    font-size: 12px;
+  }
+
+  .dashboard-support-row > .streak-card .recovery-status {
+    font-size: 7px;
+  }
+
+  .dashboard-support-row > .streak-card > p {
+    font-size: 7px;
+    line-height: 1.2;
+  }
+
+  .system-dashboard .mission-console .mission-open-button {
+    max-width: 100%;
+    min-width: 0;
+    min-height: 24px;
+    gap: 4px;
+    padding-inline: 7px;
+    font-size: 6px;
+    letter-spacing: 0.03em;
+    white-space: normal;
+  }
+}
+
+/* Cinematic page pass: one clear content surface, compact headers, deliberate scroll areas. */
+.character-page,
+.analytics-page,
+.skills-page,
+.achievements-page,
+.inventory-page,
+.focus-page {
+  border-color: rgba(165, 146, 255, 0.2);
+  background:
+    radial-gradient(ellipse at 86% 0, rgba(106, 75, 171, 0.1), transparent 36%),
+    linear-gradient(145deg, rgba(15, 17, 29, 0.97), rgba(6, 9, 17, 0.99));
+}
+
+.character-page-heading,
+.analytics-page > .quest-heading,
+.skills-page > .quest-heading,
+.achievements-page > .quest-heading,
+.inventory-page > .quest-heading {
+  min-width: 0;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.analytics-page > .quest-heading,
+.skills-page > .quest-heading,
+.achievements-page > .quest-heading,
+.inventory-page > .quest-heading {
+  min-height: 0;
+  margin: 0;
+  padding: 0 0 8px;
+}
+
+.character-portrait-panel {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border-color: rgba(108, 186, 239, 0.26);
+  background:
+    radial-gradient(circle at 50% 32%, rgba(87, 181, 255, 0.2), transparent 33%),
+    linear-gradient(155deg, rgba(18, 30, 48, 0.96), rgba(7, 9, 18, 0.98));
+}
+
+.character-portrait-panel::before {
+  position: absolute;
+  z-index: -1;
+  inset: 14% 18%;
+  border: 1px solid rgba(119, 190, 245, 0.12);
+  border-radius: 50%;
+  box-shadow: 0 0 40px rgba(67, 151, 221, 0.1);
+  content: "";
+  pointer-events: none;
+}
+
+.character-portrait-panel .character-avatar {
+  flex: 0 0 auto;
+  border-color: rgba(126, 207, 255, 0.68);
+  outline: 1px solid rgba(126, 207, 255, 0.16);
+  outline-offset: 5px;
+  background:
+    radial-gradient(circle at 50% 30%, rgba(100, 193, 255, 0.44), transparent 56%),
+    linear-gradient(145deg, rgba(30, 71, 112, 0.86), #080e1a 72%);
+  box-shadow:
+    inset 0 0 30px rgba(85, 180, 246, 0.2),
+    0 0 32px rgba(62, 153, 255, 0.18);
+}
+
+.character-dossier-side {
+  grid-template-rows: auto auto minmax(0, 1fr);
+  align-content: stretch;
+}
+
+.character-mini-stats > div {
+  border-color: rgba(149, 169, 201, 0.09);
+  background: rgba(9, 13, 23, 0.55);
+}
+
+.character-equipment-summary,
+.character-title-strip {
+  border-color: rgba(149, 169, 201, 0.1);
+  background: rgba(9, 12, 21, 0.42);
+}
+
+.character-tab-panel {
+  min-width: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+.character-tab-panel .character-stat {
+  border-color: rgba(169, 148, 230, 0.12);
+  background: rgba(10, 12, 22, 0.46);
+}
+
+.character-class-tab {
+  min-width: 0;
+  min-height: 0;
+}
+
+.character-class-record,
+.character-class-tab > .character-edit {
+  min-width: 0;
+  border-color: rgba(169, 148, 230, 0.12);
+  background: rgba(8, 10, 19, 0.42);
+}
+
+.page-grid-quests > .daily-system-header {
+  align-self: stretch;
+  border-color: rgba(165, 146, 255, 0.16);
+  background:
+    radial-gradient(ellipse at 90% 15%, rgba(135, 105, 212, 0.12), transparent 45%),
+    rgba(8, 9, 17, 0.74);
+}
+
+.page-grid-quests > .quests {
+  padding: 12px;
+  background:
+    radial-gradient(ellipse at 88% 0, rgba(91, 131, 211, 0.1), transparent 38%),
+    linear-gradient(145deg, rgba(12, 16, 29, 0.96), rgba(6, 9, 17, 0.98));
+}
+
+.page-grid-quests .quest-card {
+  grid-template-columns: 24px 36px minmax(0, 1fr) auto auto;
+  gap: 9px;
+  border-color: rgba(130, 157, 205, 0.14);
+  background: rgba(6, 12, 23, 0.76);
+}
+
+.page-grid-quests .quest-icon {
+  width: 36px;
+  height: 36px;
+  color: #b9a5ff;
+  border-color: rgba(160, 139, 232, 0.25);
+  background: rgba(115, 82, 190, 0.1);
+  box-shadow: none;
+}
+
+.page-grid-quests .quest-info h3 {
+  color: #f1edff;
+  font-size: 13px;
+}
+
+.page-grid-quests .quest-info > p {
+  color: rgba(215, 216, 233, 0.76);
+  font-size: 10px;
+}
+
+.page-grid-quests .quest-details summary {
+  color: #bda9ff;
+}
+
+.page-grid-quests .quest-reward {
+  color: #cdbaff;
+}
+
+.page-grid-focus > .focus-page {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 10px 24px;
+  padding: clamp(14px, 2vw, 24px);
+}
+
+.system-content > .focus-page-shell {
+  display: grid;
+  grid-auto-rows: minmax(0, 1fr);
+  align-content: stretch;
+}
+
+.page-grid-focus .focus-header {
+  grid-column: 1 / -1;
+  align-self: start;
+  margin: 0;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(165, 146, 255, 0.12);
+}
+
+.page-grid-focus .focus-task {
+  grid-column: 1;
+  grid-row: 2;
+  align-self: end;
+  margin: 0;
+}
+
+.page-grid-focus .focus-duration {
+  grid-column: 1;
+  grid-row: 3;
+  align-self: start;
+  justify-content: flex-start;
+  margin: 0;
+}
+
+.page-grid-focus .focus-timer {
+  grid-column: 2;
+  grid-row: 2 / 4;
+  align-self: center;
+  justify-self: center;
+  margin: 0;
+}
+
+.page-grid-focus .focus-controls {
+  grid-column: 1;
+  grid-row: 4;
+  justify-content: flex-start;
+  margin: 0;
+}
+
+.page-grid-focus .focus-status {
+  grid-column: 2;
+  grid-row: 4;
+  justify-content: center;
+  margin: 0;
+}
+
+.page-grid-focus .focus-timer .focus-progress {
+  width: clamp(176px, 28vh, 230px);
+  height: clamp(176px, 28vh, 230px);
+}
+
+.page-grid-focus .focus-history-open .focus-history {
+  inset: 10px 10px 10px auto;
+}
+
+.page-grid-analytics > .analytics-page {
+  gap: 8px;
+}
+
+.page-grid-analytics .analytics-period-tabs {
+  align-self: flex-start;
+}
+
+.page-grid-analytics .analytics-metrics {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+}
+
+.page-grid-analytics .analytics-metric {
+  min-width: 0;
+  min-height: 76px;
+  gap: 4px;
+  padding: 8px;
+  border-color: rgba(161, 144, 217, 0.13);
+  background: rgba(10, 12, 21, 0.62);
+}
+
+.page-grid-analytics .analytics-metric-icon {
+  width: 25px;
+  height: 25px;
+}
+
+.page-grid-analytics .analytics-chart {
+  display: flex;
+  min-height: 0;
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: 8px;
+  padding: 10px 12px;
+}
+
+.page-grid-analytics .analytics-bars {
+  min-height: 0;
+  height: auto;
+  flex: 1 1 auto;
+  margin: 0;
+}
+
+.page-grid-analytics .analytics-day {
+  min-height: 0;
+}
+
+.page-grid-skills .skill-tree-intro {
+  max-width: 900px;
+  color: rgba(220, 218, 237, 0.78);
+}
+
+.page-grid-skills .skill-tree-summary span {
+  border-color: rgba(143, 166, 207, 0.1);
+  background: rgba(10, 15, 27, 0.48);
+}
+
+.page-grid-skills .skill-trees-grid {
+  grid-auto-rows: max-content;
+  align-content: start;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(169, 145, 234, 0.45) rgba(7, 10, 18, 0.5);
+}
+
+.page-grid-skills .skill-tree {
+  height: max-content;
+  min-height: 0;
+  overflow: visible;
+  border-color: rgba(146, 130, 202, 0.16);
+  background:
+    linear-gradient(145deg, rgba(38, 34, 62, 0.34), transparent 58%),
+    rgba(8, 12, 21, 0.83);
+}
+
+.page-grid-skills .skill-tree-nodes {
+  min-height: auto;
+  overflow: visible;
+}
+
+.page-grid-skills .skill-tree-nodes li {
+  min-height: 132px;
+}
+
+.page-grid-skills .skill-node-content > p {
+  color: rgba(220, 218, 237, 0.78);
+}
+
+.page-grid-skills .skill-unlock-button {
+  min-height: 32px;
+}
+
+.page-grid-achievements .achievements-grid {
+  gap: 8px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(169, 145, 234, 0.42) rgba(7, 10, 18, 0.5);
+}
+
+.page-grid-achievements .achievement-card {
+  gap: 12px;
+  border-color: rgba(146, 130, 202, 0.14);
+  background: rgba(8, 12, 21, 0.64);
+}
+
+.page-grid-achievements .achievement-card.locked {
+  filter: none;
+  opacity: 0.76;
+}
+
+.page-grid-achievements .achievement-card.unlocked {
+  border-color: rgba(255, 153, 111, 0.3);
+  background:
+    linear-gradient(115deg, rgba(116, 62, 50, 0.13), transparent 62%),
+    rgba(8, 12, 21, 0.7);
+}
+
+.page-grid-achievements .achievement-icon {
+  width: 42px;
+  min-width: 42px;
+  height: 42px;
+}
+
+.page-grid-achievements .achievement-card p {
+  color: rgba(220, 218, 237, 0.78);
+}
+
+.page-grid-inventory .inventory-page > .quest-heading {
+  min-height: 45px;
+  margin: 0;
+  padding: 0 0 8px;
+}
+
+.page-grid-inventory .inventory-wallet {
+  min-height: 32px;
+}
+
+.page-grid-inventory .inventory-tabs {
+  margin: 0;
+}
+
+.page-grid-inventory .inventory-loadout-layout {
+  gap: 14px;
+}
+
+.page-grid-inventory .inventory-section-heading {
+  margin-bottom: 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(165, 146, 255, 0.1);
+}
+
+.page-grid-inventory .equipment-slots {
+  gap: 6px;
+}
+
+.page-grid-inventory .equipment-slot {
+  min-height: 66px;
+  gap: 5px;
+  border-color: rgba(146, 130, 202, 0.13);
+  background: rgba(8, 12, 21, 0.55);
+}
+
+.page-grid-inventory .equipment-slot.filled {
+  border-color: rgba(86, 187, 244, 0.27);
+}
+
+.page-grid-skills .quest-heading h2,
+.page-grid-achievements .quest-heading h2,
+.page-grid-inventory .quest-heading h2 {
+  font-size: clamp(18px, 1.4vw, 23px);
+  line-height: 1.15;
+}
+
+.skill-tree {
+  --skill-branch-rgb: 177, 154, 255;
+}
+
+.skill-tree-warrior {
+  --skill-branch-rgb: 255, 153, 112;
+}
+
+.skill-tree-scholar {
+  --skill-branch-rgb: 91, 196, 255;
+}
+
+.skill-tree-shadow_hunter {
+  --skill-branch-rgb: 179, 139, 255;
+}
+
+.skill-tree-architect {
+  --skill-branch-rgb: 115, 224, 185;
+}
+
+.skill-tree-phantom {
+  --skill-branch-rgb: 255, 130, 193;
+}
+
+.skill-tree-icon {
+  color: rgb(var(--skill-branch-rgb));
+  border-color: rgba(var(--skill-branch-rgb), 0.34);
+  background: rgba(var(--skill-branch-rgb), 0.1);
+}
+
+.skill-tree-header > strong {
+  color: rgb(var(--skill-branch-rgb));
+}
+
+.page-grid-inventory .inventory-grid {
+  align-content: start;
+  gap: 8px;
+}
+
+.page-grid-inventory .inventory-item {
+  gap: 6px;
+  border-color: rgba(146, 130, 202, 0.14);
+  background: rgba(8, 12, 21, 0.62);
+}
+
+.page-grid-inventory .inventory-item h4,
+.page-grid-inventory .inventory-item > p {
+  overflow-wrap: anywhere;
+}
+
+.page-grid-inventory .transaction-history,
+.page-grid-inventory .shop-section {
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+@media (max-width: 1100px) {
+  .page-grid-character .character-class-tab {
+    grid-template-columns: minmax(0, 1fr);
+    overflow-y: auto;
+  }
+
+  .page-grid-analytics .analytics-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .page-grid-analytics .analytics-metric {
+    min-height: 62px;
+  }
+}
+
+@media (max-height: 500px) {
+  .page-grid-focus > .focus-page {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 0.9fr);
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    gap: 5px 12px;
+    padding: 8px 10px;
+  }
+
+  .page-grid-focus .focus-header {
+    padding-bottom: 4px;
+  }
+
+  .page-grid-focus .focus-header h2 {
+    margin: 2px 0;
+    font-size: 14px;
+  }
+
+  .page-grid-focus .focus-header p {
+    font-size: 8px;
+    line-height: 1.25;
+  }
+
+  .page-grid-focus .focus-task {
+    grid-row: 2;
+    align-self: center;
+  }
+
+  .page-grid-focus .focus-task label {
+    margin-bottom: 3px;
+    font-size: 7px;
+  }
+
+  .page-grid-focus .focus-task input {
+    min-height: 30px;
+    padding-block: 4px;
+  }
+
+  .page-grid-focus .focus-duration {
+    grid-row: 3;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  .page-grid-focus .focus-duration button {
+    min-width: 56px;
+    min-height: 27px;
+    padding-inline: 6px;
+    font-size: 7px;
+  }
+
+  .page-grid-focus .focus-timer {
+    grid-column: 2;
+    grid-row: 2 / 4;
+  }
+
+  .page-grid-focus .focus-timer .focus-progress {
+    width: clamp(112px, 31vh, 148px);
+    height: clamp(112px, 31vh, 148px);
+  }
+
+  .page-grid-focus .focus-timer-inner strong {
+    font-size: clamp(20px, 4vw, 28px);
+  }
+
+  .page-grid-focus .focus-controls {
+    grid-column: 1;
+    grid-row: 4;
+    gap: 5px;
+  }
+
+  .page-grid-focus .focus-main-button,
+  .page-grid-focus .focus-reset {
+    min-height: 29px;
+    padding-inline: 8px;
+    font-size: 7px;
+  }
+
+  .page-grid-focus .focus-status {
+    display: none;
+  }
+
+  .page-grid-analytics > .analytics-page {
+    gap: 5px;
+  }
+
+  .page-grid-analytics .analytics-chart {
+    padding: 6px 8px;
+  }
+
+  .page-grid-analytics .analytics-bars {
+    min-height: 0;
+  }
+
+  .page-grid-skills .skill-tree-nodes li {
+    min-height: 122px;
+  }
+}
+
+@media (max-width: 480px) {
+  .page-grid-analytics > .analytics-page {
+    grid-template-rows: auto auto auto minmax(0, 1fr) auto;
+  }
+
+  .page-grid-analytics .analytics-metrics {
+    grid-row: 3;
+  }
+
+  .page-grid-analytics .analytics-chart {
+    grid-row: 4;
+  }
+
+  .page-grid-analytics .analytics-note {
+    grid-column: 1 / -1;
+    grid-row: 5;
+    font-size: 6px;
+    line-height: 1.2;
+  }
+
+  .page-grid-inventory .inventory-loadout-layout {
+    grid-template-columns: minmax(100px, 0.4fr) minmax(0, 1fr);
+  }
+
+  .page-grid-inventory .equipment-slots {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .page-grid-inventory .inventory-grid,
+  .page-grid-inventory .shop-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-height: 820px), (max-width: 760px) {
+  .system-content > footer {
+    display: none;
+  }
+}
+
+/* Page identity pass: larger focal content, with details revealed in context. */
+.character-page,
+.quests,
+.focus-page,
+.analytics-page,
+.skill-archive,
+.achievements-page,
+.inventory-page {
+  border: 1px solid rgba(98, 154, 209, 0.14);
+  background:
+    radial-gradient(ellipse at 82% 0, rgba(33, 117, 184, 0.11), transparent 42%),
+    linear-gradient(145deg, rgba(9, 17, 30, 0.98), rgba(4, 8, 15, 0.99));
+}
+
+.character-page,
+.analytics-page,
+.skill-archive,
+.achievements-page,
+.inventory-page {
+  gap: 12px;
+}
+
+.character-page-heading,
+.analytics-page > .quest-heading,
+.skill-archive > .quest-heading,
+.achievements-page > .quest-heading,
+.inventory-page > .quest-heading {
+  min-height: 0;
+  padding-bottom: 7px;
+  border-bottom: 1px solid rgba(111, 178, 229, 0.13);
+}
+
+.character-page-heading h2,
+.analytics-page > .quest-heading h2,
+.skill-archive > .quest-heading h2,
+.achievements-page > .quest-heading h2,
+.inventory-page > .quest-heading h2 {
+  font-size: clamp(18px, 1.6vw, 25px);
+  letter-spacing: 0.12em;
+}
+
+.page-grid-character > .character-page {
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr);
+  overflow: hidden;
+}
+
+.character-dossier-layout {
+  grid-template-columns: minmax(0, 1.08fr) minmax(0, 0.92fr);
+  min-height: 0;
+  gap: 18px;
+}
+
+.character-portrait-panel {
+  display: grid;
+  min-height: 0;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+  grid-template-rows: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 6px 12px;
+  padding: clamp(10px, 1.5vw, 22px);
+  border: 0;
+  background:
+    radial-gradient(ellipse at 34% 50%, rgba(32, 132, 204, 0.2), transparent 53%),
+    linear-gradient(115deg, rgba(10, 25, 42, 0.92), rgba(6, 11, 20, 0.86));
+}
+
+.character-portrait-panel::before {
+  inset: 5% 8% 3%;
+  border-color: rgba(99, 202, 255, 0.12);
+  border-radius: 48% 48% 22% 22%;
+}
+
+.hunter-portrait-art {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  grid-column: 1;
+  grid-row: 1 / 3;
+  align-self: stretch;
+  filter: drop-shadow(0 10px 24px rgba(20, 162, 239, 0.2));
+}
+
+.character-portrait-copy {
+  grid-column: 2;
+  grid-row: 1;
+  align-self: end;
+}
+
+.character-portrait-copy .system-label {
+  color: #83d6ff;
+  font-size: 9px;
+  letter-spacing: 0.18em;
+}
+
+.character-portrait-copy h3 {
+  margin: 8px 0 3px;
+  color: #f0f8ff;
+  font-size: clamp(24px, 3vw, 42px);
+  letter-spacing: 0.12em;
+  line-height: 1;
+}
+
+.character-portrait-copy p {
+  margin: 0;
+  color: rgba(207, 231, 250, 0.72);
+  font-size: 12px;
+}
+
+.character-featured-title {
+  display: inline-flex;
+  margin-top: 16px;
+  padding: 6px 9px;
+  color: #a4e7ff;
+  background: rgba(64, 183, 238, 0.09);
+  font-size: 9px;
+  letter-spacing: 0.14em;
+}
+
+.character-portrait-panel .character-xp-track {
+  grid-column: 2;
+  grid-row: 2;
+  width: 100%;
+  margin: 0;
+}
+
+.character-portrait-panel > strong,
+.character-portrait-panel > small {
+  grid-column: 2;
+  text-align: left;
+}
+
+.character-dossier-side {
+  gap: 14px;
+  padding: 8px 0;
+}
+
+.character-mini-stats {
+  gap: 8px 14px;
+}
+
+.character-mini-stats > div {
+  min-height: 38px;
+  padding: 4px 0;
+  border: 0;
+  border-bottom: 1px solid rgba(140, 180, 218, 0.1);
+  background: none;
+}
+
+.character-equipment-summary,
+.character-title-strip {
+  padding: 10px 0;
+  border: 0;
+  border-top: 1px solid rgba(140, 180, 218, 0.1);
+  background: none;
+}
+
+.page-grid-quests {
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 8px;
+}
+
+.page-grid-quests > .daily-system-header {
+  grid-column: 1;
+  grid-row: 1;
+  display: flex;
+  min-height: 0;
+  align-items: center;
+  justify-content: space-between;
+  padding: 7px 12px;
+  border: 0;
+  border-left: 2px solid rgba(74, 185, 241, 0.72);
+  background: linear-gradient(90deg, rgba(38, 132, 195, 0.11), transparent 75%);
+}
+
+.page-grid-quests > .daily-system-header h2 {
+  margin: 2px 0 0;
+  font-size: 13px;
+}
+
+.page-grid-quests > .create-quest-button {
+  position: relative;
+  z-index: 2;
+  grid-column: 2;
+  grid-row: 1;
+  align-self: center;
+  min-height: 32px;
+}
+
+.page-grid-quests > .quests {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  display: grid;
+  min-height: 0;
+  grid-template-columns: minmax(0, 0.88fr) minmax(0, 1.12fr);
+  grid-template-rows: auto auto minmax(0, 1fr);
+  gap: 8px 22px;
+  padding: clamp(12px, 1.5vw, 22px);
+  overflow: hidden;
+  border: 0;
+  background:
+    radial-gradient(ellipse at 85% 50%, rgba(28, 121, 186, 0.08), transparent 45%),
+    linear-gradient(145deg, rgba(8, 16, 29, 0.96), rgba(5, 9, 16, 0.96));
+}
+
+.page-grid-quests > .quests > .quest-heading {
+  grid-column: 1 / -1;
+  margin: 0;
+}
+
+.page-grid-quests > .quests > .quest-cadence-tabs {
+  grid-column: 1 / -1;
+  margin: 0;
+  border-bottom-color: rgba(111, 178, 229, 0.12);
+}
+
+.page-grid-quests .quest-list {
+  grid-column: 1;
+  grid-row: 3;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding-right: 5px;
+  overflow: auto;
+}
+
+.page-grid-quests .quest-card {
+  display: grid;
+  min-height: 60px;
+  grid-template-columns: 22px 32px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 9px;
+  border: 0;
+  border-bottom: 1px solid rgba(131, 171, 210, 0.13);
+  background: rgba(9, 20, 34, 0.56);
+  transition: background 160ms ease, border-color 160ms ease;
+}
+
+.page-grid-quests .quest-card.selected {
+  border-left: 2px solid #63caff;
+  background: linear-gradient(90deg, rgba(48, 147, 207, 0.16), rgba(9, 20, 34, 0.45));
+}
+
+.page-grid-quests .quest-select {
+  display: grid;
+  min-width: 0;
+  gap: 4px;
+  padding: 0;
+  color: inherit;
+  border: 0;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+}
+
+.page-grid-quests .quest-select > strong {
+  overflow: hidden;
+  color: #e7f2ff;
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.page-grid-quests .quest-select > span:last-child {
+  overflow: hidden;
+  color: rgba(204, 220, 237, 0.62);
+  font-size: 9px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.page-grid-quests .quest-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.page-grid-quests .quest-actions {
+  grid-column: 4;
+  grid-row: 1;
+}
+
+.page-grid-quests .quest-briefing {
+  display: flex;
+  min-width: 0;
+  grid-column: 2;
+  grid-row: 3;
+  flex-direction: column;
+  align-self: stretch;
+  justify-content: center;
+  padding: clamp(12px, 2vw, 26px);
+  border-left: 1px solid rgba(114, 185, 232, 0.16);
+  background: radial-gradient(ellipse at 80% 10%, rgba(29, 130, 196, 0.13), transparent 52%);
+}
+
+.quest-briefing-top,
+.quest-briefing-reward {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.quest-briefing-status {
+  color: #77dcff;
+  font-size: 9px;
+  letter-spacing: 0.16em;
+}
+
+.quest-briefing-status.completed {
+  color: #82e0ba;
+}
+
+.quest-briefing h3 {
+  margin: 18px 0 8px;
+  color: #eff8ff;
+  font-size: clamp(20px, 2.2vw, 32px);
+  line-height: 1.1;
+}
+
+.quest-briefing > p {
+  max-width: 54ch;
+  margin: 0 0 16px;
+  color: rgba(218, 231, 244, 0.76);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.quest-briefing-objective {
+  display: grid;
+  gap: 7px;
+  padding: 12px 0;
+  border-top: 1px solid rgba(121, 174, 218, 0.14);
+  border-bottom: 1px solid rgba(121, 174, 218, 0.14);
+}
+
+.quest-briefing-objective > span,
+.quest-briefing-reward > span {
+  color: rgba(174, 206, 232, 0.56);
+  font-size: 9px;
+  letter-spacing: 0.16em;
+}
+
+.quest-briefing-objective > strong {
+  color: #d7edff;
+  font-size: 11px;
+}
+
+.quest-briefing-objective > div {
+  height: 4px;
+  background: rgba(113, 163, 209, 0.14);
+}
+
+.quest-briefing-objective > div span {
+  display: block;
+  height: 100%;
+  background: #64d4ff;
+}
+
+.quest-briefing-reward {
+  justify-content: flex-start;
+  padding: 14px 0;
+}
+
+.quest-briefing-reward strong {
+  color: #7bdcff;
+  font-size: 18px;
+}
+
+.quest-briefing-reward small {
+  margin-left: auto;
+  color: rgba(184, 205, 225, 0.58);
+  font-size: 8px;
+}
+
+.quest-briefing-action {
+  display: inline-flex;
+  min-height: 42px;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  margin-top: 8px;
+  color: #04111b;
+  border: 0;
+  background: linear-gradient(100deg, #7be2ff, #4da8ef);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+
+.quest-briefing-action:disabled {
+  color: #a6d9c4;
+  background: rgba(87, 174, 132, 0.15);
+}
+
+.skill-archive {
+  display: grid;
+  grid-template-rows: auto auto auto minmax(0, 1fr);
+  --skill-accent: 99, 202, 255;
+  background:
+    radial-gradient(ellipse at 82% 48%, rgba(var(--skill-accent), 0.1), transparent 40%),
+    linear-gradient(145deg, rgba(8, 15, 27, 0.98), rgba(4, 8, 15, 0.99));
+}
+
+.skill-archive.branch-warrior { --skill-accent: 255, 153, 112; }
+.skill-archive.branch-scholar { --skill-accent: 91, 196, 255; }
+.skill-archive.branch-shadow_hunter { --skill-accent: 179, 139, 255; }
+.skill-archive.branch-architect { --skill-accent: 115, 224, 185; }
+.skill-archive.branch-phantom { --skill-accent: 255, 130, 193; }
+
+.skill-branch-tabs {
+  display: flex;
+  gap: 5px;
+  overflow-x: auto;
+}
+
+.skill-branch-tabs button {
+  display: flex;
+  min-width: 100px;
+  min-height: 40px;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 0 10px;
+  color: rgba(203, 222, 241, 0.66);
+  border: 0;
+  border-bottom: 1px solid rgba(128, 169, 208, 0.12);
+  background: transparent;
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+}
+
+.skill-branch-tabs button.active {
+  color: rgb(var(--skill-accent));
+  border-bottom: 2px solid rgb(var(--skill-accent));
+  background: rgba(var(--skill-accent), 0.07);
+}
+
+.skill-branch-tabs button small {
+  color: inherit;
+  opacity: 0.65;
+}
+
+.skill-branch-overview {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 0;
+}
+
+.skill-branch-emblem {
+  display: grid;
+  width: 48px;
+  height: 48px;
+  place-items: center;
+  color: rgb(var(--skill-accent));
+  border: 1px solid rgba(var(--skill-accent), 0.34);
+  background: rgba(var(--skill-accent), 0.08);
+  box-shadow: 0 0 26px rgba(var(--skill-accent), 0.08);
+}
+
+.skill-branch-overview > div:nth-child(2) > span,
+.skill-branch-progress > span,
+.skill-branch-progress > small {
+  color: rgba(185, 214, 240, 0.56);
+  font-size: 8px;
+  letter-spacing: 0.14em;
+}
+
+.skill-branch-overview h3 {
+  margin: 2px 0;
+  color: #eff6ff;
+  font-size: 18px;
+  letter-spacing: 0.12em;
+}
+
+.skill-branch-overview p {
+  margin: 0;
+  color: rgba(205, 222, 239, 0.64);
+  font-size: 10px;
+}
+
+.skill-branch-progress {
+  display: grid;
+  justify-items: end;
+  gap: 3px;
+}
+
+.skill-branch-progress > strong {
+  color: rgb(var(--skill-accent));
+  font-size: 16px;
+}
+
+.skill-domain-xp {
+  display: flex;
+  gap: 8px;
+  color: rgba(171, 203, 232, 0.5);
+  font-size: 7px;
+}
+
+.skill-branch-workspace {
+  display: grid;
+  min-height: 0;
+  grid-template-columns: minmax(0, 1.15fr) minmax(250px, 0.85fr);
+  gap: 20px;
+  overflow: auto;
+}
+
+.skill-path {
+  display: flex;
+  min-height: 0;
+  flex-direction: column;
+  justify-content: center;
+  padding: 6px 14px;
+}
+
+.skill-path-step {
+  display: grid;
+  min-height: 96px;
+  grid-template-columns: 54px minmax(0, 1fr);
+  align-items: center;
+}
+
+.skill-path-link {
+  position: absolute;
+  width: 1px;
+  height: 36px;
+  align-self: start;
+  margin: -36px 0 0 26px;
+  background: linear-gradient(rgb(var(--skill-accent)), rgba(var(--skill-accent), 0.12));
+}
+
+.skill-path-node {
+  display: grid;
+  min-width: 0;
+  grid-column: 1 / -1;
+  grid-template-columns: 48px minmax(0, 1fr);
+  align-items: center;
+  gap: 2px 12px;
+  padding: 8px;
+  color: rgba(205, 224, 244, 0.68);
+  border: 1px solid rgba(136, 176, 214, 0.11);
+  background: rgba(9, 18, 31, 0.56);
+  text-align: left;
+}
+
+.skill-path-node.selected {
+  color: #f0f8ff;
+  border-color: rgba(var(--skill-accent), 0.52);
+  background: linear-gradient(100deg, rgba(var(--skill-accent), 0.13), rgba(9, 18, 31, 0.76));
+}
+
+.skill-path-number {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  grid-row: 1 / 3;
+  place-items: center;
+  color: rgb(var(--skill-accent));
+  border: 1px solid rgba(var(--skill-accent), 0.34);
+  border-radius: 50%;
+}
+
+.skill-path-number small {
+  font-size: 7px;
+}
+
+.skill-path-node > strong {
+  font-size: 12px;
+  letter-spacing: 0.1em;
+}
+
+.skill-path-node > span:last-child {
+  color: rgba(186, 212, 236, 0.53);
+  font-size: 8px;
+  letter-spacing: 0.1em;
+}
+
+.skill-path-node.unlocked .skill-path-number {
+  color: #08131d;
+  background: rgb(var(--skill-accent));
+}
+
+.skill-node-briefing {
+  align-self: center;
+  padding: 18px 20px;
+  border-left: 1px solid rgba(var(--skill-accent), 0.24);
+  background: linear-gradient(110deg, rgba(var(--skill-accent), 0.045), transparent);
+}
+
+.skill-node-briefing > .system-label,
+.skill-node-effect > span {
+  color: rgb(var(--skill-accent));
+  font-size: 8px;
+  letter-spacing: 0.15em;
+}
+
+.skill-node-briefing h3 {
+  margin: 8px 0;
+  color: #f0f7ff;
+  font-size: 22px;
+  letter-spacing: 0.1em;
+}
+
+.skill-node-briefing > p {
+  color: rgba(212, 227, 241, 0.72);
+  font-size: 11px;
+  line-height: 1.55;
+}
+
+.skill-node-effect {
+  display: grid;
+  gap: 5px;
+  margin: 14px 0;
+  padding: 10px 0;
+  border-top: 1px solid rgba(141, 181, 220, 0.11);
+  border-bottom: 1px solid rgba(141, 181, 220, 0.11);
+}
+
+.skill-node-effect > strong {
+  color: #e2f1ff;
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+.skill-node-briefing dl {
+  display: grid;
+  gap: 6px;
+  margin: 0 0 14px;
+}
+
+.skill-node-briefing dl > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.skill-node-briefing dt {
+  color: rgba(181, 207, 232, 0.48);
+  font-size: 8px;
+  letter-spacing: 0.1em;
+}
+
+.skill-node-briefing dd {
+  margin: 0;
+  color: rgba(222, 236, 250, 0.82);
+  font-size: 9px;
+  text-align: right;
+}
+
+.skill-node-briefing .skill-unlock-button {
+  width: 100%;
+  min-height: 39px;
+  color: #07131d;
+  border: 0;
+  background: rgb(var(--skill-accent));
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+}
+
+.skill-node-briefing .skill-unlock-button:disabled {
+  color: rgba(203, 221, 239, 0.55);
+  border: 1px solid rgba(132, 164, 198, 0.15);
+  background: rgba(92, 113, 138, 0.12);
+}
+
+.inventory-loadout-layout {
+  grid-template-columns: minmax(170px, 0.58fr) minmax(0, 1.42fr);
+  gap: 20px;
+}
+
+.equipment-loadout {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-right: 12px;
+  border-right: 1px solid rgba(121, 174, 218, 0.13);
+}
+
+.equipment-silhouette {
+  position: relative;
+  display: grid;
+  min-height: 128px;
+  flex: 1 1 auto;
+  place-items: center;
+  background: radial-gradient(ellipse, rgba(42, 139, 203, 0.12), transparent 65%);
+}
+
+.equipment-silhouette svg {
+  height: min(100%, 190px);
+  max-width: 100%;
+  fill: rgba(72, 131, 177, 0.13);
+  stroke: rgba(116, 196, 244, 0.48);
+  stroke-width: 2;
+}
+
+.equipment-silhouette span {
+  position: absolute;
+  bottom: 4px;
+  color: rgba(172, 207, 236, 0.4);
+  font-size: 7px;
+  letter-spacing: 0.18em;
+}
+
+.equipment-slots {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.equipment-slot {
+  display: grid;
+  min-height: 56px;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 4px 8px;
+  padding: 7px 8px;
+  border: 0;
+  border-bottom: 1px solid rgba(135, 174, 211, 0.13);
+  background: rgba(10, 20, 32, 0.46);
+}
+
+.equipment-slot > span {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.equipment-slot > strong {
+  grid-column: 2;
+  grid-row: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.equipment-slot > svg {
+  grid-column: 3;
+  grid-row: 1;
+  color: #69d6ff;
+}
+
+.equipment-slot > small {
+  grid-column: 1 / 3;
+}
+
+.equipment-slot > button {
+  grid-column: 3;
+  grid-row: 2 / 4;
+  min-height: 28px;
+}
+
+.item-detail-select {
+  display: block;
+  width: 100%;
+  padding: 0;
+  color: #e9f4ff;
+  border: 0;
+  background: none;
+  font-size: 13px;
+  font-weight: 800;
+  text-align: left;
+  cursor: pointer;
+}
+
+.inventory-item-briefing {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  margin-top: 8px;
+  padding: 10px 12px;
+  border-left: 2px solid rgba(94, 200, 255, 0.56);
+  background: rgba(18, 43, 64, 0.35);
+}
+
+.inventory-item-briefing-icon {
+  color: #6ed6ff;
+}
+
+.inventory-item-briefing span {
+  color: rgba(166, 207, 237, 0.58);
+  font-size: 8px;
+  letter-spacing: 0.13em;
+}
+
+.inventory-item-briefing h4,
+.inventory-item-briefing p {
+  margin: 2px 0;
+}
+
+.inventory-item-briefing h4 {
+  color: #eff8ff;
+  font-size: 12px;
+}
+
+.inventory-item-briefing p {
+  color: rgba(207, 224, 240, 0.68);
+  font-size: 9px;
+}
+
+.inventory-item-briefing > strong {
+  color: #b7eaff;
+  font-size: 9px;
+}
+
+.achievement-record-layout {
+  display: grid;
+  min-height: 0;
+  grid-template-columns: minmax(0, 1.3fr) minmax(210px, 0.7fr);
+  gap: 18px;
+}
+
+.achievements-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-content: start;
+  overflow: auto;
+}
+
+.achievement-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 84px;
+  padding: 10px;
+  color: inherit;
+  border: 0;
+  border-bottom: 1px solid rgba(126, 169, 209, 0.15);
+  background: rgba(10, 20, 33, 0.55);
+  text-align: left;
+  cursor: pointer;
+}
+
+.achievement-card.selected {
+  background: linear-gradient(100deg, rgba(56, 146, 206, 0.15), rgba(10, 20, 33, 0.4));
+  box-shadow: inset 2px 0 #72d7ff;
+}
+
+.achievement-card-copy {
+  display: grid;
+  min-width: 0;
+  gap: 4px;
+}
+
+.achievement-card-copy > strong {
+  overflow: hidden;
+  color: #edf5ff;
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.achievement-card-copy > small {
+  color: rgba(193, 214, 233, 0.65);
+  font-size: 8px;
+}
+
+.achievement-card-progress {
+  height: 3px;
+  background: rgba(130, 169, 206, 0.15);
+}
+
+.achievement-card-progress > span {
+  display: block;
+  height: 100%;
+  background: #55c8ff;
+}
+
+.achievement-feature {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  padding: clamp(12px, 2vw, 24px);
+  border-left: 1px solid rgba(116, 178, 222, 0.17);
+  background: radial-gradient(ellipse at 50% 25%, rgba(36, 132, 196, 0.12), transparent 62%);
+}
+
+.achievement-feature-art {
+  display: grid;
+  width: 72px;
+  height: 72px;
+  margin-bottom: 15px;
+  place-items: center;
+  color: #71d5ff;
+  border: 1px solid rgba(113, 213, 255, 0.42);
+  background: rgba(39, 139, 200, 0.1);
+  box-shadow: 0 0 28px rgba(48, 166, 227, 0.12);
+}
+
+.achievement-feature.unlocked .achievement-feature-art {
+  color: #ffd178;
+  border-color: rgba(255, 198, 112, 0.5);
+  background: rgba(255, 185, 77, 0.08);
+}
+
+.achievement-feature h3 {
+  margin: 7px 0;
+  color: #f1f8ff;
+  font-size: clamp(16px, 1.8vw, 25px);
+}
+
+.achievement-feature p {
+  color: rgba(209, 225, 241, 0.7);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.achievement-feature > strong {
+  margin-top: 6px;
+  color: #d8efff;
+  font-size: 11px;
+}
+
+.achievement-feature > small {
+  margin-top: 14px;
+  color: rgba(178, 207, 231, 0.55);
+  font-size: 8px;
+  letter-spacing: 0.12em;
+}
+
+.focus-page {
+  grid-template-rows: auto auto minmax(0, 1fr) auto auto;
+  align-items: center;
+  justify-items: center;
+  background:
+    radial-gradient(ellipse at 50% 56%, rgba(30, 135, 203, 0.13), transparent 38%),
+    linear-gradient(145deg, rgba(7, 16, 29, 0.98), rgba(3, 8, 15, 0.99));
+}
+
+.focus-page .focus-header {
+  width: 100%;
+}
+
+.focus-page .focus-header > div {
+  margin-inline: auto;
+  text-align: center;
+}
+
+.focus-page .focus-task {
+  width: min(100%, 520px);
+  justify-self: center;
+  text-align: center;
+}
+
+.focus-page .focus-task input {
+  text-align: center;
+}
+
+.focus-page .focus-timer {
+  align-self: center;
+  justify-self: center;
+}
+
+.focus-page .focus-duration,
+.focus-page .focus-controls {
+  justify-content: center;
+}
+
+.analytics-chart-tabs {
+  display: flex;
+  gap: 5px;
+  margin: 2px 0 6px;
+}
+
+.analytics-chart-tabs button {
+  min-height: 27px;
+  padding: 0 10px;
+  color: rgba(194, 216, 236, 0.56);
+  border: 0;
+  border-bottom: 1px solid rgba(129, 173, 212, 0.14);
+  background: transparent;
+  font-size: 8px;
+  letter-spacing: 0.1em;
+}
+
+.analytics-chart-tabs button.active {
+  color: #82dcff;
+  border-color: #54c9ff;
+  background: rgba(56, 168, 224, 0.08);
+}
+
+.analytics-metric {
+  border: 0;
+  border-left: 2px solid rgba(97, 199, 255, 0.4);
+  background: linear-gradient(105deg, rgba(34, 114, 171, 0.12), rgba(7, 15, 26, 0.34));
+}
+
+.analytics-chart {
+  border: 0;
+  background: linear-gradient(145deg, rgba(11, 24, 39, 0.74), rgba(5, 10, 18, 0.45));
+}
+
+.system-dashboard {
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+  grid-template-rows: minmax(0, 1.05fr) minmax(0, 0.95fr);
+  gap: 12px;
+}
+
+.dashboard-primary-column,
+.dashboard-secondary-column {
+  display: contents;
+}
+
+.system-dashboard .mission-console {
+  grid-column: 1;
+  grid-row: 1;
+  border: 0;
+  border-left: 2px solid rgba(87, 203, 255, 0.72);
+  background:
+    radial-gradient(ellipse at 82% 30%, rgba(32, 134, 202, 0.17), transparent 46%),
+    linear-gradient(125deg, rgba(9, 23, 39, 0.95), rgba(5, 10, 18, 0.92));
+}
+
+.system-dashboard .player-status {
+  grid-column: 1;
+  grid-row: 2;
+  display: grid;
+  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+  align-items: center;
+  border: 0;
+  background: linear-gradient(110deg, rgba(14, 28, 44, 0.76), rgba(6, 11, 19, 0.56));
+}
+
+.system-dashboard .player-status .attributes {
+  display: none;
+}
+
+.system-dashboard .player-status .player-core {
+  grid-column: 1;
+}
+
+.system-dashboard .player-status .xp-section {
+  grid-column: 2;
+}
+
+.system-dashboard .quests {
+  grid-column: 2;
+  grid-row: 1 / 3;
+  border: 0;
+  border-left: 1px solid rgba(115, 175, 221, 0.15);
+  background: linear-gradient(145deg, rgba(8, 17, 29, 0.88), rgba(5, 10, 17, 0.84));
+}
+
+.system-dashboard .dashboard-support-row {
+  display: none;
+}
+
+@media (max-width: 900px) and (orientation: landscape) {
+  .page-grid-quests > .quests {
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+    gap: 6px 12px;
+  }
+
+  .page-grid-quests .quest-briefing {
+    padding: 10px;
+  }
+
+  .quest-briefing h3 {
+    margin-top: 8px;
+    font-size: 18px;
+  }
+
+  .quest-briefing > p {
+    margin-bottom: 8px;
+    font-size: 10px;
+  }
+
+  .skill-branch-tabs button {
+    min-width: 82px;
+    min-height: 34px;
+    gap: 4px;
+    padding-inline: 6px;
+    font-size: 7px;
+  }
+
+  .skill-branch-workspace {
+    grid-template-columns: minmax(0, 1fr) minmax(210px, 0.8fr);
+    gap: 10px;
+  }
+
+  .skill-path-step {
+    min-height: 76px;
+  }
+
+  .skill-node-briefing {
+    padding: 10px;
+  }
+
+  .achievement-record-layout {
+    grid-template-columns: minmax(0, 1.2fr) minmax(180px, 0.8fr);
+    gap: 10px;
+  }
+
+  .achievement-card {
+    min-height: 62px;
+    padding: 6px;
+  }
+}
+
+@media (max-width: 760px) and (orientation: landscape) {
+  .character-dossier-layout {
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+    gap: 8px;
+  }
+
+  .character-portrait-panel {
+    grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+    padding: 7px;
+  }
+
+  .character-portrait-copy h3 {
+    font-size: 21px;
+  }
+
+  .character-portrait-copy p {
+    font-size: 9px;
+  }
+
+  .character-featured-title {
+    margin-top: 6px;
+    padding: 4px 6px;
+    font-size: 7px;
+  }
+
+  .character-mini-stats {
+    gap: 2px 8px;
+  }
+
+  .character-mini-stats > div {
+    min-height: 27px;
+  }
+
+  .achievement-record-layout {
+    grid-template-columns: minmax(0, 1fr) minmax(150px, 0.75fr);
+  }
+
+  .achievements-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 4px;
+  }
+}
+
+@media (max-height: 500px) and (max-width: 900px) and (orientation: landscape) {
+  .system-dashboard {
+    grid-template-columns: minmax(0, 0.82fr) minmax(0, 1.18fr);
+    grid-template-rows: minmax(0, 1.12fr) minmax(0, 0.88fr);
+    gap: 7px;
+  }
+
+  .system-dashboard .mission-console {
+    grid-column: 1;
+    grid-row: 1;
+    overflow: hidden;
+  }
+
+  .system-dashboard .mission-console .mission-console-top {
+    min-height: 24px;
+    padding: 3px 7px;
+  }
+
+  .system-dashboard .mission-console .mission-console-body {
+    display: block;
+    padding: 7px;
+  }
+
+  .system-dashboard .mission-console .mission-contract {
+    display: grid;
+    gap: 5px;
+  }
+
+  .system-dashboard .mission-console .mission-contract h2 {
+    margin: 0;
+    font-size: 15px;
+  }
+
+  .system-dashboard .mission-console .mission-contract p {
+    margin: 0;
+    font-size: 9px;
+    line-height: 1.3;
+  }
+
+  .system-dashboard .mission-console .mission-contract-footer {
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-top: 4px;
+  }
+
+  .system-dashboard .mission-console .mission-open-button {
+    min-height: 29px;
+    padding: 5px 7px;
+    font-size: 7px;
+  }
+
+  .system-dashboard .mission-console .mission-clearance {
+    display: none;
+  }
+
+  .system-dashboard .player-status {
+    grid-column: 1;
+    grid-row: 2;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    gap: 5px;
+    padding: 7px;
+  }
+
+  .system-dashboard .player-status > .section-label {
+    display: none;
+  }
+
+  .system-dashboard .player-status .player-core {
+    grid-column: 1;
+  }
+
+  .system-dashboard .player-status .level-display {
+    grid-column: 2;
+    display: flex;
+    gap: 8px;
+  }
+
+  .system-dashboard .player-status .xp-section {
+    grid-column: 3;
+    min-width: 92px;
+    padding: 0;
+  }
+
+  .system-dashboard .player-status .xp-section > div:first-child {
+    display: grid;
+  }
+
+  .system-dashboard .player-status .xp-bar {
+    margin-top: 4px;
+  }
+
+  .system-dashboard .player-status {
+    overflow: hidden;
+  }
+
+  .system-dashboard .quests {
+    grid-column: 2;
+    grid-row: 1 / 3;
+    display: grid;
+    grid-template-rows: auto auto minmax(0, 1fr);
+    gap: 4px;
+    overflow: hidden;
+    padding: 8px;
+  }
+
+  .system-dashboard .quests > .quest-heading {
+    margin: 0 0 4px;
+    padding-bottom: 4px;
+  }
+
+  .system-dashboard .quests > .quest-heading h2 {
+    margin-top: 2px;
+    font-size: 13px;
+    line-height: 1.1;
+  }
+
+  .system-dashboard .quests > .quest-heading .system-label,
+  .system-dashboard .quests > .quest-heading .quest-count {
+    font-size: 7px;
+  }
+
+  .system-dashboard .quests > .quest-cadence-tabs {
+    flex-wrap: nowrap;
+    margin-bottom: 5px;
+    min-height: 26px;
+  }
+
+  .system-dashboard .quests > .quest-cadence-tabs button {
+    min-height: 24px;
+    padding: 4px 7px;
+    font-size: 6px;
+  }
+
+  .system-dashboard .quests .quest-list {
+    min-height: 0;
+    flex: 1 1 auto;
+    gap: 2px;
+    overflow: auto;
+  }
+
+  .system-dashboard .quests .quest-card {
+    min-height: 42px;
+    grid-template-columns: 19px 25px minmax(0, 1fr) auto;
+    gap: 5px;
+    padding: 4px;
+  }
+
+  .system-dashboard .quests .quest-icon {
+    width: 25px;
+    height: 25px;
+  }
+
+  .system-dashboard .quests .quest-select {
+    gap: 2px;
+    justify-items: start;
+    text-align: left;
+  }
+
+  .system-dashboard .quests .quest-select > strong {
+    font-size: 9px;
+  }
+
+  .system-dashboard .quests .quest-select > span:last-child,
+  .system-dashboard .quests .quest-briefing,
+  .system-dashboard .quests .quest-actions {
+    display: none;
+  }
+
+  .page-grid-quests {
+    grid-template-rows: 36px minmax(0, 1fr);
+    gap: 5px;
+  }
+
+  .page-grid-quests > .daily-system-header {
+    min-height: 0;
+    padding: 3px 8px;
+  }
+
+  .page-grid-quests > .daily-system-header h2 {
+    font-size: 10px;
+  }
+
+  .page-grid-quests > .create-quest-button {
+    min-height: 29px;
+    font-size: 8px;
+  }
+
+  .page-grid-quests > .quests {
+    grid-template-rows: auto auto minmax(0, 1fr);
+    gap: 4px 8px;
+    padding: 8px;
+  }
+
+  .page-grid-quests > .quests > .quest-heading {
+    padding-bottom: 4px;
+  }
+
+  .page-grid-quests > .quests > .quest-heading h2 {
+    font-size: 15px;
+  }
+
+  .page-grid-quests > .quests > .quest-cadence-tabs {
+    min-height: 29px;
+    padding-bottom: 3px;
+  }
+
+  .page-grid-quests .quest-list {
+    gap: 1px;
+  }
+
+  .page-grid-quests .quest-card {
+    min-height: 45px;
+    grid-template-columns: 17px 25px minmax(0, 1fr) auto;
+    gap: 5px;
+    padding: 4px;
+  }
+
+  .page-grid-quests .quest-icon {
+    width: 25px;
+    height: 25px;
+  }
+
+  .page-grid-quests .quest-select {
+    gap: 2px;
+  }
+
+  .page-grid-quests .quest-select > strong {
+    font-size: 9px;
+  }
+
+  .page-grid-quests .quest-select > span:last-child {
+    font-size: 7px;
+  }
+
+  .page-grid-quests .quest-briefing {
+    padding: 6px;
+  }
+
+  .page-grid-quests .quest-briefing h3 {
+    margin: 4px 0;
+    font-size: 14px;
+  }
+
+  .page-grid-quests .quest-briefing > p {
+    margin-bottom: 5px;
+    font-size: 8px;
+    line-height: 1.35;
+  }
+
+  .page-grid-quests .quest-briefing-objective {
+    gap: 3px;
+    padding: 5px 0;
+  }
+
+  .page-grid-quests .quest-briefing-reward {
+    padding: 6px 0;
+  }
+
+  .page-grid-quests .quest-briefing-action {
+    min-height: 30px;
+    margin-top: 2px;
+    font-size: 7px;
+  }
+
+  .page-grid-character > .character-page {
+    gap: 4px;
+    padding: 8px;
+    overflow-y: auto;
+  }
+
+  .character-page-heading {
+    align-items: center;
+    padding: 0 0 4px;
+  }
+
+  .character-page-heading .system-label {
+    font-size: 7px;
+  }
+
+  .character-page-heading h2 {
+    margin-top: 2px;
+    font-size: 14px;
+  }
+
+  .character-rank {
+    padding: 5px 8px;
+    font-size: 8px;
+  }
+
+  .character-tabs {
+    min-height: 28px;
+  }
+
+  .character-tabs button {
+    min-height: 27px;
+    padding: 4px 7px;
+    font-size: 7px;
+  }
+
+  .character-dossier-layout {
+    grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
+    min-height: 0;
+    gap: 7px;
+  }
+
+  .character-portrait-panel {
+    min-height: 140px;
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+    grid-template-rows: minmax(0, 1fr) auto;
+    gap: 3px;
+    padding: 5px;
+  }
+
+  .character-portrait-copy .system-label {
+    font-size: 6px;
+  }
+
+  .character-portrait-copy h3 {
+    margin: 4px 0 2px;
+    font-size: 18px;
+  }
+
+  .character-portrait-copy p {
+    font-size: 7px;
+  }
+
+  .character-featured-title {
+    margin-top: 4px;
+    padding: 3px 4px;
+    font-size: 6px;
+  }
+
+  .character-portrait-panel > strong,
+  .character-portrait-panel > small {
+    font-size: 6px;
+  }
+
+  .character-dossier-side {
+    grid-template-rows: auto auto auto;
+    gap: 1px;
+    padding: 0;
+  }
+
+  .character-mini-stats {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0 5px;
+  }
+
+  .character-mini-stats > div {
+    min-height: 20px;
+    padding: 2px 0;
+  }
+
+  .character-mini-stats span,
+  .character-equipment-summary > .system-label,
+  .character-title-strip > .system-label {
+    font-size: 6px;
+  }
+
+  .character-mini-stats strong {
+    font-size: 8px;
+  }
+
+  .character-equipment-summary,
+  .character-title-strip {
+    padding: 1px 0;
+  }
+
+  .character-equipment-summary > div {
+    margin-top: 0;
+    padding-top: 0;
+    line-height: 1;
+    font-size: 6px;
+  }
+
+  .character-equipment-summary > .system-label,
+  .character-equipment-summary > div span,
+  .character-equipment-summary > div strong,
+  .character-title-strip > .system-label {
+    font-size: 5px;
+    line-height: 1;
+  }
+
+  .character-equipment-summary strong,
+  .character-title-strip > div > span {
+    font-size: 6px;
+  }
+
+  .character-title-strip > div {
+    gap: 2px;
+    margin-top: 3px;
+  }
+
+  .character-title-strip > div > span {
+    padding: 1px 2px;
+    font-size: 5px;
+    line-height: 1;
+  }
+
+  .skill-archive {
+    display: grid;
+    grid-template-rows: auto auto auto minmax(0, 1fr);
+    gap: 4px;
+    padding: 8px;
+    overflow: hidden;
+  }
+
+  .page-grid-skills > .skill-archive {
+    display: grid;
+  }
+
+  .skill-archive > .quest-heading {
+    min-height: 0;
+    padding-bottom: 4px;
+  }
+
+  .skill-archive > .quest-heading h2 {
+    font-size: 14px;
+  }
+
+  .skill-branch-tabs {
+    min-height: 28px;
+    flex-wrap: nowrap;
+  }
+
+  .skill-branch-tabs button {
+    min-width: max-content;
+    min-height: 28px;
+    padding: 0 5px;
+    font-size: 6px;
+  }
+
+  .skill-branch-tabs button svg {
+    width: 11px;
+    height: 11px;
+  }
+
+  .skill-branch-overview {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    gap: 7px;
+    padding: 2px 0;
+  }
+
+  .skill-branch-emblem {
+    width: 30px;
+    height: 30px;
+  }
+
+  .skill-branch-emblem svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .skill-branch-overview > div:nth-child(2) > span,
+  .skill-branch-progress > span,
+  .skill-branch-progress > small {
+    font-size: 6px;
+  }
+
+  .skill-branch-overview h3 {
+    font-size: 12px;
+  }
+
+  .skill-branch-overview p {
+    font-size: 7px;
+  }
+
+  .skill-branch-progress > strong {
+    font-size: 10px;
+  }
+
+  .skill-domain-xp {
+    gap: 3px;
+    font-size: 5px;
+  }
+
+  .skill-branch-workspace {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 0.9fr);
+    gap: 5px;
+    overflow: hidden;
+  }
+
+  .skill-path {
+    justify-content: start;
+    padding: 2px;
+    overflow-y: auto;
+  }
+
+  .skill-path-step {
+    min-height: 42px;
+    grid-template-columns: 31px minmax(0, 1fr);
+  }
+
+  .skill-path-link {
+    width: 1px;
+    height: 13px;
+    margin: -13px 0 0 16px;
+  }
+
+  .skill-path-node {
+    grid-template-columns: 27px minmax(0, 1fr);
+    gap: 1px 5px;
+    padding: 3px;
+  }
+
+  .skill-path-number {
+    width: 24px;
+    height: 24px;
+  }
+
+  .skill-path-number svg {
+    width: 10px;
+    height: 10px;
+  }
+
+  .skill-path-number small {
+    font-size: 5px;
+  }
+
+  .skill-path-node > strong {
+    font-size: 7px;
+  }
+
+  .skill-path-node > span:last-child {
+    font-size: 5px;
+  }
+
+  .skill-node-briefing {
+    padding: 5px;
+    overflow-y: auto;
+  }
+
+  .skill-node-briefing h3 {
+    margin: 3px 0;
+    font-size: 12px;
+  }
+
+  .skill-node-briefing > p,
+  .skill-node-effect > strong {
+    margin: 2px 0;
+    font-size: 7px;
+    line-height: 1.3;
+  }
+
+  .skill-node-effect {
+    gap: 2px;
+    margin: 4px 0;
+    padding: 4px 0;
+  }
+
+  .skill-node-briefing dl {
+    gap: 3px;
+    margin-bottom: 5px;
+  }
+
+  .skill-node-briefing dt,
+  .skill-node-briefing dd {
+    font-size: 6px;
+  }
+
+  .skill-node-briefing .skill-unlock-button {
+    min-height: 28px;
+    font-size: 6px;
+  }
+
+  .page-grid-achievements > .achievements-page {
+    gap: 5px;
+    padding: 8px;
+    overflow: auto;
+  }
+
+  .achievement-record-layout {
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+    gap: 5px;
+  }
+
+  .achievements-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2px;
+  }
+
+  .achievement-card {
+    min-height: 42px;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 5px;
+    padding: 4px;
+  }
+
+  .achievement-card .achievement-icon {
+    width: 28px;
+    min-width: 28px;
+    height: 28px;
+  }
+
+  .achievement-card .achievement-icon svg {
+    width: 15px;
+    height: 15px;
+  }
+
+  .achievement-card-copy {
+    gap: 1px;
+  }
+
+  .achievement-card-copy > strong {
+    font-size: 7px;
+  }
+
+  .achievement-card-copy > small,
+  .achievement-status {
+    font-size: 5px;
+  }
+
+  .achievement-feature {
+    padding: 5px;
+  }
+
+  .achievement-feature-art {
+    width: 34px;
+    height: 34px;
+    margin-bottom: 4px;
+  }
+
+  .achievement-feature-art svg {
+    width: 19px;
+    height: 19px;
+  }
+
+  .achievement-feature h3 {
+    margin: 3px 0;
+    font-size: 11px;
+  }
+
+  .achievement-feature p,
+  .achievement-feature > strong {
+    margin: 3px 0;
+    font-size: 7px;
+  }
+
+  .achievement-feature > small {
+    margin-top: 4px;
+    font-size: 5px;
+  }
+
+  .page-grid-inventory > .inventory-page {
+    gap: 5px;
+    padding: 8px;
+  }
+
+  .inventory-page > .quest-heading h2 {
+    font-size: 14px;
+  }
+
+  .inventory-page .inventory-tabs {
+    min-height: 28px;
+  }
+
+  .inventory-loadout-layout {
+    grid-template-columns: minmax(100px, 0.52fr) minmax(0, 1.48fr);
+    gap: 7px;
+  }
+
+  .equipment-loadout {
+    gap: 3px;
+    padding-right: 5px;
+  }
+
+  .equipment-silhouette {
+    min-height: 42px;
+    max-height: 58px;
+  }
+
+  .equipment-silhouette span {
+    display: none;
+  }
+
+  .equipment-slots {
+    gap: 2px;
+  }
+
+  .equipment-slot {
+    min-height: 38px;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 2px 4px;
+    padding: 3px;
+  }
+
+  .equipment-slot > span,
+  .equipment-slot > strong {
+    grid-column: 1;
+    grid-row: auto;
+  }
+
+  .equipment-slot > strong {
+    font-size: 7px;
+  }
+
+  .equipment-slot > svg {
+    grid-column: 2;
+    grid-row: 1 / 3;
+    width: 12px;
+    height: 12px;
+  }
+
+  .equipment-slot > small {
+    display: none;
+  }
+
+  .equipment-slot > button {
+    grid-column: 1 / -1;
+    grid-row: auto;
+    min-height: 22px;
+  }
+
+  .inventory-item-briefing {
+    gap: 5px;
+    padding: 5px;
+  }
+
+  .inventory-item-briefing p {
+    display: none;
+  }
+
+  .focus-page {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: 31px 31px minmax(0, 1fr) 24px 25px;
+    gap: 4px;
+    padding: 7px;
+  }
+
+  .page-grid-focus > .focus-page {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: 34px 34px minmax(0, 1fr) 24px 25px;
+    gap: 4px;
+  }
+
+  .focus-page .focus-header {
+    width: 100%;
+    grid-column: 1;
+    grid-row: 1;
+    padding-bottom: 0;
+  }
+
+  .focus-page .focus-header h2 {
+    margin: 0;
+    font-size: 12px;
+  }
+
+  .focus-page .focus-header .system-label {
+    font-size: 6px;
+  }
+
+  .focus-page .focus-header p {
+    display: none;
+  }
+
+  .focus-page .focus-task {
+    grid-column: 1;
+    grid-row: 2;
+    width: min(100%, 360px);
+  }
+
+  .focus-page .focus-task label {
+    margin-bottom: 0;
+    font-size: 6px;
+  }
+
+  .focus-page .focus-task input {
+    min-height: 23px;
+    padding-block: 2px;
+  }
+
+  .focus-page .focus-timer {
+    grid-column: 1;
+    grid-row: 3;
+    align-self: center;
+    justify-self: center;
+  }
+
+  .focus-page .focus-timer .focus-progress {
+    width: clamp(100px, 29vh, 118px);
+    height: clamp(100px, 29vh, 118px);
+  }
+
+  .focus-page .focus-timer-inner strong {
+    font-size: 23px;
+  }
+
+  .focus-page .focus-duration {
+    grid-column: 1;
+    grid-row: 4;
+    gap: 4px;
+  }
+
+  .focus-page .focus-duration button {
+    min-width: 54px;
+    min-height: 26px;
+    padding: 4px 6px;
+    font-size: 6px;
+  }
+
+  .focus-page .focus-controls {
+    grid-column: 1;
+    grid-row: 5;
+    gap: 5px;
+  }
+
+  .focus-page .focus-main-button,
+  .focus-page .focus-reset {
+    min-height: 27px;
+    padding: 4px 8px;
+    font-size: 7px;
+  }
+
+  .analytics-page {
+    grid-template-rows: auto auto auto minmax(0, 1fr) auto;
+    gap: 5px;
+    padding: 8px;
+  }
+
+  .analytics-page > .quest-heading h2 {
+    font-size: 13px;
+  }
+
+  .analytics-page .analytics-metrics {
+    gap: 4px;
+  }
+
+  .analytics-page .analytics-metric {
+    min-height: 48px;
+    padding: 5px;
+  }
+
+  .analytics-page .analytics-metric strong {
+    font-size: 12px;
+  }
+
+  .analytics-chart {
+    min-height: 0;
+  }
+
+  .analytics-chart-tabs {
+    margin: 0;
+  }
+
+  .analytics-chart-tabs button {
+    min-height: 23px;
+  }
+
+  .analytics-note {
+    margin: 0;
+    font-size: 6px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-grid-quests .quest-card,
+  .skill-path-node {
+    transition: none;
   }
 }

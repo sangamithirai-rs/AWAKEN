@@ -17,7 +17,6 @@ import type {
   SkillLevels,
 } from "../types/game";
 import {
-  getCharacterInitials,
   getHunterTitles,
   getProgressionClass,
   hunterClasses,
@@ -126,14 +125,53 @@ export default function CharacterPage({
       {tab === "DOSSIER" && (
         <div className="character-dossier-layout">
           <section className="character-portrait-panel">
-            <div className="character-avatar" aria-label={`${profile.name} avatar initials`}>
-              {getCharacterInitials(profile.name)}
+            <svg
+              className="hunter-portrait-art"
+              viewBox="0 0 360 440"
+              role="img"
+              aria-label="Original illustrated hunter in a luminous blue cloak"
+            >
+              <defs>
+                <linearGradient id="hunter-cloak" x1="0" x2="1" y1="0" y2="1">
+                  <stop offset="0" stopColor="#284f78" />
+                  <stop offset=".48" stopColor="#111d31" />
+                  <stop offset="1" stopColor="#080d18" />
+                </linearGradient>
+                <linearGradient id="hunter-face" x1="0" x2=".8" y1="0" y2="1">
+                  <stop offset="0" stopColor="#f1d8d0" />
+                  <stop offset="1" stopColor="#a97875" />
+                </linearGradient>
+                <linearGradient id="hunter-hair" x1="0" x2="1" y1="0" y2="1">
+                  <stop offset="0" stopColor="#e9f4ff" />
+                  <stop offset=".42" stopColor="#91bde5" />
+                  <stop offset="1" stopColor="#385e88" />
+                </linearGradient>
+                <radialGradient id="hunter-aura">
+                  <stop stopColor="#57caff" stopOpacity=".4" />
+                  <stop offset="1" stopColor="#57caff" stopOpacity="0" />
+                </radialGradient>
+              </defs>
+              <ellipse cx="180" cy="213" fill="url(#hunter-aura)" rx="158" ry="190" />
+              <path d="M66 409c8-96 35-139 84-159h60c50 20 78 64 84 159v31H66z" fill="url(#hunter-cloak)" stroke="#77caff" strokeOpacity=".52" strokeWidth="2" />
+              <path d="m138 251 42 39 42-39 21 21-33 159h-60l-33-159z" fill="#111a2b" stroke="#7199c2" strokeOpacity=".5" strokeWidth="2" />
+              <path d="m137 267 43 35 43-35-16 51-27-15-27 15z" fill="#73d9ff" fillOpacity=".8" />
+              <path d="M126 107c3-51 26-75 58-75s57 24 59 75l-8 92c-6 39-27 61-51 61s-45-22-51-61z" fill="url(#hunter-face)" stroke="#f1d9e3" strokeOpacity=".45" strokeWidth="2" />
+              <path d="M112 154c-19-78 14-132 69-132 64 0 88 53 67 131l-18-33-6-44-31 31-20-35-31 36-10-25-4 55z" fill="url(#hunter-hair)" stroke="#c3e5ff" strokeOpacity=".6" strokeWidth="2" />
+              <path d="m132 141 31-6m35 0 31 6" fill="none" stroke="#28445e" strokeWidth="5" strokeLinecap="round" />
+              <path d="m139 153 23 3m40 0 22-3" fill="none" stroke="#56d8ff" strokeWidth="4" strokeLinecap="round" />
+              <path d="m170 191 10 5 10-5" fill="none" stroke="#805d62" strokeWidth="2" strokeLinecap="round" />
+              <path d="M98 283 65 323l-9-66 39-55m167 81 33 40 9-66-39-55" fill="#17283c" stroke="#69c8f2" strokeOpacity=".62" strokeWidth="3" />
+              <path d="M75 366h31m148 0h31" stroke="#5ddaff" strokeOpacity=".55" strokeWidth="2" />
+              <path d="M92 404h47m82 0h47" stroke="#c1e9ff" strokeOpacity=".36" strokeWidth="2" />
+            </svg>
+            <div className="character-portrait-copy">
+              <span className="system-label">RANK {rank} HUNTER · LEVEL {String(level).padStart(2, "0")}</span>
+              <h3>{profile.name}</h3>
+              <p>{selectedClass.name} · {selectedClass.specializations.find(
+                (item) => item.id === profile.specialization,
+              )?.name}</p>
+              <div className="character-featured-title">{titles[0] ?? "AWAKENED HUNTER"}</div>
             </div>
-            <span className="system-label">ACTIVE HUNTER · LEVEL {String(level).padStart(2, "0")}</span>
-            <h3>{profile.name}</h3>
-            <p>{selectedClass.name} · {selectedClass.specializations.find(
-              (item) => item.id === profile.specialization,
-            )?.name}</p>
             <div
               className="character-xp-track"
               role="progressbar"

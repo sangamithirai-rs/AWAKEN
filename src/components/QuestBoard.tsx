@@ -17,6 +17,7 @@ export default function QuestBoard({
 }: QuestBoardProps) {
   const [filter, setFilter] = useState<"DAILY" | "WEEKLY" | "MAIN" | "SIDE">("DAILY");
   const [category, setCategory] = useState("ALL");
+  const [selectedQuestId, setSelectedQuestId] = useState<string | null>(null);
 
   const categories = useMemo(() => {
     const categories = quests
@@ -46,6 +47,11 @@ export default function QuestBoard({
   const completedCount = filteredQuests.filter(
     (quest) => completedQuests.includes(quest.id)
   ).length;
+  const selectedQuest = filteredQuests.find((quest) => quest.id === selectedQuestId)
+    ?? filteredQuests[0];
+  const selectedQuestCompleted = selectedQuest
+    ? completedQuests.includes(selectedQuest.id)
+    : false;
 
   return (
     <section className="panel quests">
@@ -80,7 +86,10 @@ export default function QuestBoard({
             className={filter === item ? "active" : ""}
             aria-pressed={filter === item}
             aria-controls="quest-list"
-            onClick={() => setFilter(item)}
+            onClick={() => {
+              setFilter(item);
+              setSelectedQuestId(null);
+            }}
           >
             {item}
           </button>
@@ -88,7 +97,13 @@ export default function QuestBoard({
         {categories.length > 2 && (
           <label className="quest-category-select">
             CATEGORY
-            <select value={category} onChange={(event) => setCategory(event.target.value)}>
+            <select
+              value={category}
+              onChange={(event) => {
+                setCategory(event.target.value);
+                setSelectedQuestId(null);
+              }}
+            >
               {categories.map((item) => <option key={item} value={item}>{item}</option>)}
             </select>
           </label>
@@ -117,7 +132,7 @@ export default function QuestBoard({
               <article
                 className={`quest-card ${
                   completed ? "completed" : ""
-                }`}
+                } ${selectedQuest?.id === quest.id ? "selected" : ""}`}
                 key={quest.id}
                 aria-label={`${quest.title}, ${completed ? "completed" : `reward ${quest.xp} experience`}`}
               >
@@ -132,86 +147,25 @@ export default function QuestBoard({
                   <Icon size={18} />
                 </div>
 
-                <div className="quest-info">
-                  <div className="quest-meta">
+                <button
+                  type="button"
+                  className="quest-select"
+                  aria-pressed={selectedQuest?.id === quest.id}
+                  onClick={() => setSelectedQuestId(quest.id)}
+                >
+                  <span className="quest-meta">
                     <span className="quest-type">
                       {quest.kind === "BOSS" ? "BOSS QUEST" : quest.type ?? "QUEST"}
                     </span>
-                    <span className="quest-cadence">{quest.cadence}</span>
                     <span className={`quest-priority priority-${quest.priority.toLowerCase()}`}>
                       {quest.priority}
                     </span>
-                  </div>
-
-                  <h3>{quest.title}</h3>
-
-                  <p>
-                    {quest.description}
-                  </p>
-                  <details className="quest-details">
-                    <summary>MISSION DETAILS</summary>
-                    <p>{quest.description}</p>
-                    <span>
-                      {quest.cadence} CONTRACT · {quest.priority} PRIORITY · {quest.attribute.toUpperCase()} ATTRIBUTE
-                    </span>
-                  </details>
-                  {quest.kind === "BOSS" && (
-                    <div className="boss-progress">
-                      <div
-                        role="progressbar"
-                        aria-label={`${quest.title} objective progress`}
-                        aria-valuemin={0}
-                        aria-valuemax={quest.goalCount}
-                        aria-valuenow={quest.currentCount}
-                      >
-                        <span
-                          style={{
-                            width: `${Math.min(100, (quest.currentCount / quest.goalCount) * 100)}%`,
-                          }}
-                        />
-                      </div>
-                      <small>OBJECTIVES {quest.currentCount}/{quest.goalCount}</small>
-                    </div>
-                  )}
-                </div>
-
-                <div className="quest-reward">
-                  +{quest.xp} XP
-                </div>
+                  </span>
+                  <strong>{quest.title}</strong>
+                  <span>{quest.description}</span>
+                </button>
 
                 <div className="quest-actions">
-                  <button
-                    type="button"
-                    className="quest-check"
-                    onClick={() =>
-                      onComplete(quest.id)
-                    }
-                    disabled={completed}
-                    aria-label={
-                      completed
-                        ? "Quest completed"
-                        : quest.kind === "BOSS"
-                          ? `Advance ${quest.title} objective ${quest.currentCount + 1} of ${quest.goalCount}`
-                          : `Complete ${quest.title} for ${quest.xp} XP`
-                    }
-                    aria-pressed={completed}
-                    title={
-                      completed
-                        ? "Quest complete"
-                        : quest.kind === "BOSS"
-                          ? `Advance objective ${quest.currentCount + 1} of ${quest.goalCount}`
-                          : `Clear quest • +${quest.xp} XP`
-                    }
-                  >
-                    {completed ? (
-                      <Check size={16} />
-                    ) : quest.kind === "BOSS" ? (
-                      <Plus size={16} />
-                    ) : (
-                      <Circle size={14} />
-                    )}
-                  </button>
-
                   {onDelete && quest.deletable && (
                     <button
                       type="button"
@@ -232,6 +186,57 @@ export default function QuestBoard({
           })
         )}
       </div>
+
+      {selectedQuest && (
+        <aside className="quest-briefing" aria-live="polite">
+          <div className="quest-briefing-top">
+            <span className="system-label">
+              {selectedQuest.kind === "BOSS" ? "BOSS CONTRACT" : `${selectedQuest.cadence} CONTRACT`}
+            </span>
+            <span className={`quest-briefing-status ${selectedQuestCompleted ? "completed" : ""}`}>
+              {selectedQuestCompleted ? "CLEARED" : "ACTIVE"}
+            </span>
+          </div>
+          <h3>{selectedQuest.title}</h3>
+          <p>{selectedQuest.description}</p>
+          <div className="quest-briefing-objective">
+            <span>OBJECTIVE</span>
+            <strong>
+              {selectedQuest.kind === "BOSS"
+                ? `${Math.min(selectedQuest.currentCount, selectedQuest.goalCount)} / ${selectedQuest.goalCount} COMPLETIONS`
+                : `${selectedQuest.attribute.toUpperCase()} · ${selectedQuest.type ?? "HUNTER OBJECTIVE"}`}
+            </strong>
+            {selectedQuest.kind === "BOSS" && (
+              <div
+                role="progressbar"
+                aria-label={`${selectedQuest.title} objective progress`}
+                aria-valuemin={0}
+                aria-valuemax={selectedQuest.goalCount}
+                aria-valuenow={selectedQuest.currentCount}
+              >
+                <span style={{ width: `${Math.min(100, (selectedQuest.currentCount / selectedQuest.goalCount) * 100)}%` }} />
+              </div>
+            )}
+          </div>
+          <div className="quest-briefing-reward">
+            <span>REWARD</span>
+            <strong>+{selectedQuest.xp} XP</strong>
+            <small>{selectedQuest.priority} PRIORITY · {selectedQuest.attribute.toUpperCase()}</small>
+          </div>
+          <button
+            type="button"
+            className="quest-briefing-action"
+            onClick={() => onComplete(selectedQuest.id)}
+            disabled={selectedQuestCompleted}
+          >
+            {selectedQuestCompleted
+              ? <><Check size={16} /> CONTRACT CLEARED</>
+              : selectedQuest.kind === "BOSS"
+                ? <><Plus size={16} /> ADVANCE OBJECTIVE</>
+                : <><Circle size={14} /> COMPLETE CONTRACT</>}
+          </button>
+        </aside>
+      )}
     </section>
   );
 }

@@ -12,6 +12,7 @@ export default function AchievementsPage({
   questCompletions,
 }: AchievementsPageProps) {
   const [filter, setFilter] = useState<"ALL" | "UNLOCKED" | "IN_PROGRESS">("ALL");
+  const [selectedId, setSelectedId] = useState<AchievementId | null>(null);
   const icons: Record<AchievementId, typeof Award> = {
     FIRST_AWAKENING: Award,
     DISCIPLINED: Shield,
@@ -29,6 +30,9 @@ export default function AchievementsPage({
     filter === "ALL"
       || (filter === "UNLOCKED" ? achievement.unlocked : !achievement.unlocked)
   );
+  const selectedAchievement = visibleAchievements.find((item) => item.id === selectedId)
+    ?? visibleAchievements.find((item) => item.unlocked)
+    ?? visibleAchievements[0];
 
   return (
     <section className="panel achievements-page">
@@ -52,53 +56,69 @@ export default function AchievementsPage({
             key={item}
             className={filter === item ? "active" : ""}
             aria-pressed={filter === item}
-            onClick={() => setFilter(item)}
+            onClick={() => {
+              setFilter(item);
+              setSelectedId(null);
+            }}
           >
             {item === "IN_PROGRESS" ? "IN PROGRESS" : item}
           </button>
         ))}
       </nav>
 
-      <div className="achievements-grid">
-        {visibleAchievements.map((achievement) => {
-          const Icon = icons[achievement.id];
-
-          return (
+      <div className="achievement-record-layout">
+        <div className="achievements-grid">
+          {visibleAchievements.map((achievement) => {
+            const Icon = icons[achievement.id];
+            const isSelected = selectedAchievement?.id === achievement.id;
+            return (
+              <button
+                type="button"
+                className={`achievement-card ${achievement.unlocked ? "unlocked" : "locked"} ${isSelected ? "selected" : ""}`}
+                key={achievement.title}
+                aria-pressed={isSelected}
+                onClick={() => setSelectedId(achievement.id)}
+              >
+                <span className="achievement-icon">
+                  <Icon size={24} aria-hidden="true" />
+                </span>
+                <span className="achievement-card-copy">
+                  <span className="achievement-status">
+                    {achievement.unlocked ? "UNLOCKED" : "IN PROGRESS"}
+                  </span>
+                  <strong>{achievement.title}</strong>
+                  <span className="achievement-card-progress">
+                    <span style={{ width: `${(achievement.progress / achievement.target) * 100}%` }} />
+                  </span>
+                  <small>{achievement.progress}/{achievement.target}</small>
+                </span>
+              </button>
+            );
+          })}
+        </div>
+        {selectedAchievement && (
+          <aside className={`achievement-feature ${selectedAchievement.unlocked ? "unlocked" : "locked"}`} aria-live="polite">
+            {(() => {
+              const Icon = icons[selectedAchievement.id];
+              return <div className="achievement-feature-art"><Icon size={38} aria-hidden="true" /></div>;
+            })()}
+            <span className="system-label">{selectedAchievement.unlocked ? "CONQUEST RECORDED" : "NEXT MILESTONE"}</span>
+            <h3>{selectedAchievement.title}</h3>
+            <p>{selectedAchievement.description}</p>
             <div
-              className={`achievement-card ${
-                achievement.unlocked ? "unlocked" : "locked"
-              }`}
-              key={achievement.title}
+              className="achievement-progress"
+              role="progressbar"
+              aria-label={`${selectedAchievement.title} progress`}
+              aria-valuemin={0}
+              aria-valuemax={selectedAchievement.target}
+              aria-valuenow={selectedAchievement.progress}
             >
-              <div className="achievement-icon">
-                <Icon size={24} />
-              </div>
-
-              <div>
-                <span className="achievement-status">
-                  {achievement.unlocked ? "UNLOCKED" : "IN PROGRESS"}
-                </span>
-
-                <h3>{achievement.title}</h3>
-
-                <p>{achievement.description}</p>
-                <div
-                  className="achievement-progress"
-                  role="progressbar"
-                  aria-label={`${achievement.title} progress`}
-                  aria-valuemin={0}
-                  aria-valuemax={achievement.target}
-                  aria-valuenow={achievement.progress}
-                >
-                  <span style={{ width: `${(achievement.progress / achievement.target) * 100}%` }} />
-                </div>
-                <span className="achievement-progress-label">
-                  {achievement.progress}/{achievement.target}
-                </span>
-              </div>
+              <span style={{ width: `${(selectedAchievement.progress / selectedAchievement.target) * 100}%` }} />
             </div>
-          );
-        })}
+            <strong>{selectedAchievement.progress} / {selectedAchievement.target}</strong>
+            <small>{selectedAchievement.unlocked ? "ACHIEVEMENT UNLOCKED" : "KEEP PROGRESSING TO UNLOCK"}</small>
+          </aside>
+        )}
       </div>
     </section>
   );

@@ -13,12 +13,14 @@ function Metric({
   value,
   previous,
   icon: Icon,
+  comparisonLabel,
   suffix = "",
 }: {
   label: string;
   value: number;
   previous: number;
   icon: typeof Zap;
+  comparisonLabel: string;
   suffix?: string;
 }) {
   const difference = value - previous;
@@ -29,7 +31,7 @@ function Metric({
       <span>{label}</span>
       <strong>{value.toLocaleString()}{suffix}</strong>
       <small>
-        {difference > 0 ? "+" : ""}{difference.toLocaleString()}{suffix} vs prior week-to-date
+        {difference > 0 ? "+" : ""}{difference.toLocaleString()}{suffix} vs {comparisonLabel}
       </small>
     </article>
   );
@@ -40,11 +42,20 @@ export default function AnalyticsPage({
   focusSessions,
 }: AnalyticsPageProps) {
   const [period, setPeriod] = useState<"DAILY" | "WEEKLY" | "MONTHLY">("WEEKLY");
+  const [chartMetric, setChartMetric] = useState<"XP" | "QUESTS" | "FOCUS">("XP");
   const report = period === "WEEKLY"
     ? getWeeklyAnalytics(activityLog, focusSessions)
     : getPeriodAnalytics(activityLog, focusSessions, period);
   const previous = "previousWeek" in report ? report.previousWeek : report.previous;
-  const maxXP = Math.max(1, ...report.days.map((day) => day.xp));
+  const chartValue = (day: typeof report.days[number]) => (
+    chartMetric === "XP" ? day.xp : chartMetric === "QUESTS" ? day.quests : day.focusMinutes
+  );
+  const maxValue = Math.max(1, ...report.days.map(chartValue));
+  const comparisonLabel = period === "DAILY"
+    ? "prior day"
+    : period === "WEEKLY"
+      ? "prior week"
+      : "prior month";
   const startLabel = new Date(`${report.startDate}T12:00:00`).toLocaleDateString([], {
     month: "short",
     day: "numeric",
@@ -63,7 +74,7 @@ export default function AnalyticsPage({
       <div className="quest-heading">
         <div>
           <span className="system-label">SYSTEM / {period} INTEL</span>
-          <h2>PRODUCTIVITY ANALYTICS</h2>
+          <h2>WEEKLY INTEL</h2>
         </div>
         <span>{startLabel}{period === "DAILY" ? "" : ` — ${endLabel}`}</span>
       </div>
@@ -83,13 +94,14 @@ export default function AnalyticsPage({
       </nav>
 
       <div className="analytics-metrics">
-        <Metric label="LOGGED XP" value={report.xp} previous={previous.xp} icon={Zap} />
-        <Metric label="QUEST CLEARS" value={report.quests} previous={previous.quests} icon={Target} />
+        <Metric label="LOGGED XP" value={report.xp} previous={previous.xp} icon={Zap} comparisonLabel={comparisonLabel} />
+        <Metric label="QUEST CLEARS" value={report.quests} previous={previous.quests} icon={Target} comparisonLabel={comparisonLabel} />
         <Metric
           label="FOCUS TIME"
           value={report.focusMinutes}
           previous={previous.focusMinutes}
           icon={Clock3}
+          comparisonLabel={comparisonLabel}
           suffix="m"
         />
         <article className="analytics-metric">
@@ -115,24 +127,47 @@ export default function AnalyticsPage({
         <div className="analytics-chart-heading">
           <div>
             <span className="system-label">{period} OUTPUT</span>
-            <h3 id="analytics-chart-title">{period === "MONTHLY" ? "XP BY DATE" : "XP BY DAY"}</h3>
+            <h3 id="analytics-chart-title">
+              {chartMetric === "XP"
+                ? period === "MONTHLY" ? "XP BY DATE" : "XP BY DAY"
+                : chartMetric === "QUESTS" ? "QUEST CLEARS" : "FOCUS MINUTES"}
+            </h3>
           </div>
-            <span>{report.xp.toLocaleString()} XP TOTAL</span>
+          <span>
+            {chartMetric === "XP"
+              ? `${report.xp.toLocaleString()} XP TOTAL`
+              : chartMetric === "QUESTS"
+                ? `${report.quests} CLEARS TOTAL`
+                : `${report.focusMinutes} FOCUS MINUTES`}
+          </span>
         </div>
+        <nav className="analytics-chart-tabs" aria-label="Activity chart metric">
+          {(["XP", "QUESTS", "FOCUS"] as const).map((metric) => (
+            <button
+              type="button"
+              key={metric}
+              className={chartMetric === metric ? "active" : ""}
+              aria-pressed={chartMetric === metric}
+              onClick={() => setChartMetric(metric)}
+            >
+              {metric === "FOCUS" ? "FOCUS TIME" : metric}
+            </button>
+          ))}
+        </nav>
         {hasRecordedActivity ? (
           <div className={`analytics-bars analytics-bars-${period.toLowerCase()}`}>
               {report.days.map((day) => (
               <div className="analytics-day" key={day.date}>
-                <strong>{day.xp.toLocaleString()}</strong>
+                <strong>{chartValue(day).toLocaleString()}</strong>
                 <div
                   className="analytics-bar-track"
                   role="progressbar"
-                  aria-label={`${day.label}: ${day.xp} XP`}
+                  aria-label={`${day.label}: ${chartValue(day)} ${chartMetric === "XP" ? "XP" : chartMetric === "QUESTS" ? "quests" : "focus minutes"}`}
                   aria-valuemin={0}
-                  aria-valuemax={maxXP}
-                  aria-valuenow={day.xp}
+                  aria-valuemax={maxValue}
+                  aria-valuenow={chartValue(day)}
                 >
-                  <span style={{ height: `${Math.max(day.xp ? 8 : 0, (day.xp / maxXP) * 100)}%` }} />
+                  <span style={{ height: `${Math.max(chartValue(day) ? 8 : 0, (chartValue(day) / maxValue) * 100)}%` }} />
                 </div>
                 <span>{period === "MONTHLY" ? Number(day.date.slice(-2)) : day.label}</span>
                 <small>{day.quests} {day.quests === 1 ? "clear" : "clears"} · {day.focusMinutes}m</small>

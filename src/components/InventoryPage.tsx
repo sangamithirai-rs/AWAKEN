@@ -1,9 +1,13 @@
 import { motion } from "framer-motion";
 import {
+  Award,
   Coins,
+  FlaskConical,
+  Gem,
   PackageOpen,
+  Shield,
   ShoppingBag,
-  Sparkles,
+  Sword,
   Swords,
 } from "lucide-react";
 import type {
@@ -46,7 +50,17 @@ export default function InventoryPage({
   onUse,
 }: InventoryPageProps) {
   const [tab, setTab] = useState<"LOADOUT" | "EXCHANGE" | "HISTORY">("LOADOUT");
+  const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const ownedCount = inventory.reduce((total, item) => total + item.quantity, 0);
+  const selectedOwnedItem = inventory.find((entry) => entry.itemId === selectedItemId);
+  const selectedItem = selectedOwnedItem ? getItem(selectedOwnedItem.itemId) : undefined;
+  const itemIcons = {
+    WEAPON: Sword,
+    ARMOUR: Shield,
+    ACCESSORY: Gem,
+    CONSUMABLE: FlaskConical,
+    COLLECTIBLE: Award,
+  };
 
   return (
     <section className="panel inventory-page" aria-labelledby="inventory-title">
@@ -83,17 +97,35 @@ export default function InventoryPage({
           <Swords size={18} aria-hidden="true" />
           <h3 id="equipment-title">ACTIVE LOADOUT</h3>
         </div>
+        <div className="equipment-silhouette" aria-hidden="true">
+          <svg viewBox="0 0 160 220">
+            <path d="M56 27c3-14 12-21 24-21s21 7 24 21l-5 31c-2 14-8 22-19 22s-17-8-19-22z" />
+            <path d="m47 75 33 16 33-16 21 24-12 37-18-8 13 82H43l13-82-18 8-12-37z" />
+            <path d="m64 79 16 15 16-15-6 28H70z" />
+            <path d="m47 97-15 45m81-45 15 45" />
+          </svg>
+          <span>HUNTER LOADOUT</span>
+        </div>
         <div className="equipment-slots">
           {slots.map((slot) => {
             const equippedId = equipment[slot];
             const equippedItem = equippedId ? getItem(equippedId) : undefined;
+            const ItemIcon = equippedItem ? itemIcons[equippedItem.category] : undefined;
             return (
               <article className={`equipment-slot ${equippedItem ? "filled" : ""}`} key={slot}>
+                {ItemIcon && <ItemIcon size={16} aria-hidden="true" />}
                 <span>{slot}</span>
                 <strong>{equippedItem?.name ?? "EMPTY SLOT"}</strong>
                 {equippedItem && (
                   <>
                     <small>{equippedItem.description}</small>
+                    {equippedItem.attributeBonus && (
+                      <small className="item-effect">
+                        {Object.entries(equippedItem.attributeBonus)
+                          .map(([attribute, value]) => `+${value} ${attribute.toUpperCase()}`)
+                          .join(" · ")}
+                      </small>
+                    )}
                     <button type="button" onClick={() => onUnequip(slot)}>UNEQUIP</button>
                   </>
                 )}
@@ -130,11 +162,21 @@ export default function InventoryPage({
                   layout
                 >
                   <div className="inventory-item-top">
-                    <Sparkles size={16} aria-hidden="true" />
+                    {(() => {
+                      const ItemIcon = itemIcons[item.category];
+                      return <ItemIcon size={16} aria-hidden="true" />;
+                    })()}
                     <span>{item.rarity} · {item.category}</span>
                     {quantity > 1 && <strong>×{quantity}</strong>}
                   </div>
-                  <h4>{item.name}</h4>
+                  <button
+                    type="button"
+                    className="item-detail-select"
+                    aria-pressed={selectedItemId === item.id}
+                    onClick={() => setSelectedItemId(item.id)}
+                  >
+                    {item.name}
+                  </button>
                   <p>{item.description}</p>
                   {item.attributeBonus && (
                     <small className="item-effect">
@@ -165,6 +207,22 @@ export default function InventoryPage({
               );
             })}
           </div>
+        )}
+        {selectedItem && selectedOwnedItem && (
+          <aside className={`inventory-item-briefing rarity-${selectedItem.rarity.toLowerCase()}`} aria-live="polite">
+            <div className="inventory-item-briefing-icon">
+              {(() => {
+                const ItemIcon = itemIcons[selectedItem.category];
+                return <ItemIcon size={22} aria-hidden="true" />;
+              })()}
+            </div>
+            <div>
+              <span>{selectedItem.rarity} · {selectedItem.category}</span>
+              <h4>{selectedItem.name}</h4>
+              <p>{selectedItem.description}</p>
+            </div>
+            <strong>OWNED ×{selectedOwnedItem.quantity}</strong>
+          </aside>
         )}
       </section>
         </div>
@@ -198,7 +256,10 @@ export default function InventoryPage({
                 whileHover={disabled ? undefined : { y: -3 }}
               >
                 <div className="inventory-item-top">
-                  <Sparkles size={16} aria-hidden="true" />
+                  {(() => {
+                    const ItemIcon = itemIcons[item.category];
+                    return <ItemIcon size={16} aria-hidden="true" />;
+                  })()}
                   <span>{item.rarity} · {item.category}</span>
                   {item.requiredLevel > 1 && <strong>LV. {item.requiredLevel}+</strong>}
                 </div>

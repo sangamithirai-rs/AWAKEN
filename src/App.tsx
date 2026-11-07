@@ -3,7 +3,9 @@ import { AnimatePresence, motion, MotionConfig } from "framer-motion";
 import {
   Activity,
   Check,
+  RotateCw,
   Sparkles,
+  Smartphone,
   Target,
   X,
 } from "lucide-react";
@@ -33,10 +35,32 @@ const bootMessages = [
   "SYSTEM ONLINE",
 ];
 
+const mobilePortraitQuery = "(orientation: portrait)";
+
+function OrientationOverlay() {
+  return (
+    <div className="orientation-overlay" role="status" aria-live="polite">
+      <div className="orientation-energy" aria-hidden="true" />
+      <div className="orientation-device" aria-hidden="true">
+        <Smartphone size={42} strokeWidth={1.2} />
+        <RotateCw className="orientation-rotate" size={23} strokeWidth={1.5} />
+      </div>
+      <span className="orientation-label">AWAKEN SYSTEM // DISPLAY PROTOCOL</span>
+      <h1>ROTATE YOUR DEVICE</h1>
+      <p>AWAKEN IS DESIGNED FOR LANDSCAPE MODE</p>
+    </div>
+  );
+}
+
 function App() {
   const [booting, setBooting] = useState(true);
   const [bootMessage, setBootMessage] = useState(bootMessages[0]);
   const [activePage, setActivePage] = useState<Page>("SYSTEM");
+  const [mobilePortrait, setMobilePortrait] = useState(
+    () =>
+      typeof window !== "undefined" &&
+      window.matchMedia(mobilePortraitQuery).matches,
+  );
   const game = useAwakenGame();
   const {
     activityLog,
@@ -72,6 +96,17 @@ function App() {
     xp,
     xpPercentage,
   } = game;
+
+  useEffect(() => {
+    const query = window.matchMedia(mobilePortraitQuery);
+    const updateOrientation = (event: MediaQueryListEvent) => {
+      setMobilePortrait(event.matches);
+    };
+
+    query.addEventListener("change", updateOrientation);
+
+    return () => query.removeEventListener("change", updateOrientation);
+  }, []);
 
   const [systemTime, setSystemTime] = useState(
     new Date().toLocaleTimeString([], {
@@ -157,7 +192,7 @@ function App() {
   if (booting) {
     return (
       <MotionConfig reducedMotion="user">
-        <div className="system-boot">
+        <div className="system-boot" aria-hidden={mobilePortrait} inert={mobilePortrait}>
           <div className="boot-grid" />
 
           <motion.div
@@ -203,6 +238,7 @@ function App() {
               {">"} {bootMessage}
             </motion.p>
           </motion.div>
+          <OrientationOverlay />
         </div>
       </MotionConfig>
     );
@@ -315,7 +351,11 @@ function App() {
         )}
       </AnimatePresence>
 
-      <main className="system-container">
+      <main
+        className="system-container"
+        aria-hidden={mobilePortrait}
+        inert={mobilePortrait}
+      >
         <SystemSidebar
           activePage={activePage}
           level={level}
@@ -364,6 +404,7 @@ function App() {
               }}
             >
               <section className="main-grid system-dashboard">
+                <div className="dashboard-primary-column">
                 <motion.section
                   className="mission-console panel"
                   initial={{ opacity: 0, y: 12 }}
@@ -457,16 +498,6 @@ function App() {
                     </div>
                   </div>
                 </motion.section>
-
-                <StreakCard
-                  current={currentStreak}
-                  longest={longestStreak}
-                  weeklyCurrent={currentWeeklyStreak}
-                  weeklyLongest={longestWeeklyStreak}
-                  recoveryCredits={recoveryCredits}
-                  canRecoverYesterday={canRecoverYesterday}
-                  onRecoverYesterday={recoverYesterday}
-                />
 
                 {/* PLAYER STATUS */}
 
@@ -611,6 +642,9 @@ function App() {
                   </div>
 
                 </motion.section>
+                </div>
+
+                <div className="dashboard-secondary-column">
 
                 {/* QUESTS */}
 
@@ -633,6 +667,17 @@ function App() {
 
                   }}
                   onDelete={deleteQuest}
+                />
+
+                <div className="dashboard-support-row">
+                <StreakCard
+                  current={currentStreak}
+                  longest={longestStreak}
+                  weeklyCurrent={currentWeeklyStreak}
+                  weeklyLongest={longestWeeklyStreak}
+                  recoveryCredits={recoveryCredits}
+                  canRecoverYesterday={canRecoverYesterday}
+                  onRecoverYesterday={recoverYesterday}
                 />
 
                 {/* OBJECTIVES */}
@@ -716,6 +761,8 @@ function App() {
                   </div>
 
                 </motion.section>
+                </div>
+                </div>
 
               </section>
             </motion.div>
@@ -999,6 +1046,8 @@ function App() {
         </div>
         </div>
       </main>
+
+      <OrientationOverlay />
     </div>
     </MotionConfig>
   );
