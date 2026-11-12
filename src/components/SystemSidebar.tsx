@@ -36,7 +36,7 @@ export default function SystemSidebar({
       <div className="sidebar-section-label">OPERATIONS</div>
       <SystemNav activePage={activePage} setActivePage={setActivePage} />
 
-      <div className="sidebar-hunter-card">
+      <div className="sidebar-hunter-card" data-rank={rank}>
         <span className="sidebar-player-label">ACTIVE HUNTER</span>
         <strong>{hunterName}</strong>
         <div>

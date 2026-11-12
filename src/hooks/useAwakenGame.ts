@@ -293,7 +293,7 @@ export function useAwakenGame() {
     if (result.leveledUp) {
       triggerLevelUp(previousLevel, getLevelProgress(result.state.xp).level);
     }
-    sound.playQuestComplete();
+    sound.playElixir();
     showNotification(`ITEM USED // +${result.earnedXP ?? 0} XP`);
   }, [commitProgression, showNotification, triggerLevelUp]);
 

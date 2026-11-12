@@ -1,7 +1,12 @@
 @import "tailwindcss";
 
 :root {
-  font-family: Inter, system-ui, sans-serif;
+  font-family: "Rajdhani", system-ui, sans-serif;
+  --font-display: "Orbitron", sans-serif;
+  --font-heading: "Orbitron", sans-serif;
+  --font-hud: "Chakra Petch", sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+  --font-body: "Rajdhani", sans-serif;
   color: #edf5ff;
   background: #05070d;
   font-synthesis: none;
@@ -56,6 +61,179 @@ textarea:focus-visible,
 select:focus-visible {
   outline: 2px solid rgba(144, 189, 255, 0.9);
   outline-offset: 2px;
+}
+
+
+/* ================================
+   SOLO LEVELING TYPOGRAPHY & RANKS
+================================ */
+h1, h2, h3, h4,
+.system-header h1,
+.boot-title,
+.level-window h2,
+.mission-contract h2,
+.panel-title,
+.rank-display strong,
+.level-number {
+  font-family: var(--font-display);
+  letter-spacing: 0.06em;
+}
+
+.system-status,
+.mission-contract-label,
+.mission-alert,
+.section-label,
+.daily-system-header .system-label,
+.sidebar-section-label,
+.sidebar-player-label,
+.badge,
+.category-tag,
+.filter-tab,
+.orientation-label {
+  font-family: var(--font-hud);
+  letter-spacing: 0.12em;
+}
+
+.system-date,
+.system-time,
+.system-terminal,
+.attribute strong,
+.vital-header strong,
+.daily-progress strong,
+.clearance-heading strong,
+.mission-xp strong,
+.xp-section strong {
+  font-family: var(--font-mono);
+}
+
+/* Resource Gauges (HP / MP / Fatigue) */
+.player-vitals {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-block: 10px;
+  padding: 10px 12px;
+  background: rgba(8, 14, 26, 0.65);
+  border: 1px solid rgba(138, 168, 220, 0.15);
+  border-radius: 4px;
+}
+
+.vital-gauge {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.vital-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+}
+
+.vital-header span {
+  font-family: var(--font-hud);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+}
+
+.vital-hp .vital-header span {
+  color: #f87171;
+}
+
+.vital-mp .vital-header span {
+  color: #38bdf8;
+}
+
+.vital-fatigue .vital-header span {
+  color: #fbbf24;
+}
+
+.vital-header strong {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: #e2e8f0;
+}
+
+.vital-track {
+  position: relative;
+  height: 6px;
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.vital-fill {
+  height: 100%;
+  border-radius: 1px;
+}
+
+.vital-fill-hp {
+  background: linear-gradient(90deg, #dc2626, #ef4444);
+  box-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
+}
+
+.vital-fill-mp {
+  background: linear-gradient(90deg, #0284c7, #38bdf8);
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.5);
+}
+
+.vital-fill-fatigue {
+  background: linear-gradient(90deg, #d97706, #fbbf24);
+  box-shadow: 0 0 10px rgba(251, 191, 36, 0.4);
+}
+
+/* Holographic Rank Aura Themes */
+.player-emblem[data-rank="S"],
+.rank-display[data-rank="S"] strong,
+.sidebar-hunter-card[data-rank="S"] {
+  border-color: rgba(245, 158, 11, 0.85) !important;
+  color: #fbbf24 !important;
+  box-shadow: 0 0 25px rgba(245, 158, 11, 0.45), inset 0 0 15px rgba(239, 68, 68, 0.25) !important;
+}
+
+.player-emblem[data-rank="A"],
+.rank-display[data-rank="A"] strong,
+.sidebar-hunter-card[data-rank="A"] {
+  border-color: rgba(192, 132, 252, 0.85) !important;
+  color: #c084fc !important;
+  box-shadow: 0 0 20px rgba(168, 85, 247, 0.4), inset 0 0 12px rgba(147, 51, 234, 0.2) !important;
+}
+
+.player-emblem[data-rank="B"],
+.rank-display[data-rank="B"] strong,
+.sidebar-hunter-card[data-rank="B"] {
+  border-color: rgba(96, 165, 250, 0.85) !important;
+  color: #60a5fa !important;
+  box-shadow: 0 0 18px rgba(59, 130, 246, 0.35), inset 0 0 10px rgba(37, 99, 235, 0.2) !important;
+}
+
+.player-emblem[data-rank="C"],
+.rank-display[data-rank="C"] strong,
+.sidebar-hunter-card[data-rank="C"] {
+  border-color: rgba(56, 189, 248, 0.8) !important;
+  color: #38bdf8 !important;
+  box-shadow: 0 0 15px rgba(14, 165, 233, 0.3) !important;
+}
+
+.player-emblem[data-rank="D"],
+.rank-display[data-rank="D"] strong,
+.sidebar-hunter-card[data-rank="D"] {
+  border-color: rgba(52, 211, 153, 0.75) !important;
+  color: #34d399 !important;
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.25) !important;
+}
+
+.player-emblem[data-rank="E"],
+.player-emblem[data-rank="E+"],
+.rank-display[data-rank="E"] strong,
+.rank-display[data-rank="E+"] strong,
+.sidebar-hunter-card[data-rank="E"],
+.sidebar-hunter-card[data-rank="E+"] {
+  border-color: rgba(148, 163, 184, 0.6) !important;
+  color: #94a3b8 !important;
+  box-shadow: 0 0 10px rgba(148, 163, 184, 0.2) !important;
 }
 
 /* ================================
@@ -13342,4 +13520,142 @@ button:disabled {
   .skill-path-node {
     transition: none;
   }
+}
+
+
+/* =============================================================
+   AWAKENING CEREMONY & HUNTER DOSSIER (PHASE 2 STYLES)
+============================================================= */
+
+.awakening-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(3, 6, 14, 0.95);
+  backdrop-filter: blur(16px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(16px, 4vw, 36px);
+  animation: overlayFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.awakening-overlay.fade-out {
+  animation: overlayFadeOut 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes overlayFadeIn {
+  from { opacity: 0; transform: scale(0.98); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes overlayFadeOut {
+  from { opacity: 1; transform: scale(1); }
+  to { opacity: 0; transform: scale(0.98); }
+}
+
+.awakening-stage {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+/* Dimensional Rift Beam */
+.rift-energy-line {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #38bdf8, #818cf8, #c084fc, transparent);
+  box-shadow: 0 0 25px #818cf8, 0 0 50px #38bdf8;
+  opacity: 0.8;
+  transform: translateY(-50%);
+  z-index: 0;
+  animation: riftBeamPulse 2.4s infinite ease-in-out;
+}
+
+@keyframes riftBeamPulse {
+  0%, 100% { opacity: 0.5; filter: blur(0px); }
+  50% { opacity: 1; filter: blur(1px); box-shadow: 0 0 40px #818cf8, 0 0 80px #38bdf8; }
+}
+
+.rift-pulse-glow {
+  position: absolute;
+  width: min(500px, 80vw);
+  height: min(500px, 80vw);
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(129, 140, 248, 0.22) 0%, rgba(56, 189, 248, 0.08) 50%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+  animation: riftGlowExpand 4s infinite alternate ease-in-out;
+}
+
+@keyframes riftGlowExpand {
+  0% { transform: scale(0.85); opacity: 0.6; }
+  100% { transform: scale(1.15); opacity: 0.95; }
+}
+
+.awakening-content {
+  position: relative;
+  z-index: 1;
+  background: rgba(8, 14, 26, 0.88);
+  border: 1px solid rgba(138, 168, 220, 0.25);
+  box-shadow: 0 0 45px rgba(0, 0, 0, 0.8), inset 0 0 20px rgba(129, 140, 248, 0.08);
+  border-radius: 6px;
+  padding: clamp(20px, 3.5vw, 36px);
+  animation: contentSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes contentSlideUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Surge Card */
+.surge-card {
+  border: 1px solid rgba(192, 132, 252, 0.45);
+  box-shadow: 0 0 50px rgba(168, 85, 247, 0.3), inset 0 0 30px rgba(129, 140, 248, 0.12);
+}
+
+.surge-burst-flare {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle, rgba(168, 85, 247, 0.35) 0%, transparent 70%);
+  animation: flareFlash 1.2s ease-out forwards;
+  pointer-events: none;
+}
+
+@keyframes flareFlash {
+  0% { opacity: 0.9; transform: scale(0.4); }
+  100% { opacity: 0; transform: scale(1.4); }
+}
+
+/* Avatar Card Hover */
+.avatar-select-card:hover {
+  background: rgba(30, 41, 59, 0.85) !important;
+  transform: translateY(-2px);
+}
+
+.avatar-select-card.selected {
+  background: rgba(30, 41, 59, 0.95) !important;
+  box-shadow: 0 0 18px rgba(129, 140, 248, 0.45);
+}
+
+/* Hunter Dossier Card */
+.hunter-dossier-card {
+  background: rgba(8, 14, 26, 0.78);
+  border: 1px solid rgba(138, 168, 220, 0.22);
+}
+
+.title-badge-row {
+  transition: all 0.2s ease;
+}
+
+.title-badge-row:hover {
+  background: rgba(15, 23, 42, 0.85) !important;
+  border-color: rgba(138, 168, 220, 0.3) !important;
 }

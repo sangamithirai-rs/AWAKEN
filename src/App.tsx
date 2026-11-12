@@ -343,6 +343,11 @@ function App() {
                 {String(levelUp.to).padStart(2, "0")}
               </div>
 
+              <div className="level-rewards-preview" style={{ display: 'flex', gap: '8px', margin: '8px 0', fontSize: '11px', fontFamily: 'var(--font-hud)' }}>
+                <span style={{ background: 'rgba(59, 130, 246, 0.2)', border: '1px solid rgba(59, 130, 246, 0.4)', padding: '2px 8px', borderRadius: '3px', color: '#93c5fd' }}>+1 SKILL POINT</span>
+                <span style={{ background: 'rgba(245, 158, 11, 0.2)', border: '1px solid rgba(245, 158, 11, 0.4)', padding: '2px 8px', borderRadius: '3px', color: '#fcd34d' }}>RANK {getRank(levelUp.to)} ACTIVE</span>
+              </div>
+
               <p>
                 NEW POTENTIAL DETECTED
               </p>
@@ -534,7 +539,7 @@ function App() {
                         duration: 3,
                         repeat: Infinity,
                       }}
-                      className="player-emblem"
+                      className="player-emblem" data-rank={getRank(level)}
                     >
                       {getCharacterInitials(characterProfile.name)}
                     </motion.div>
@@ -556,7 +561,7 @@ function App() {
                       </strong>
                     </div>
 
-                    <div className="rank-display">
+                    <div className="rank-display" data-rank={getRank(level)}>
                       <span>RANK</span>
 
                       <strong>
@@ -589,6 +594,54 @@ function App() {
 
                     </div>
 
+                  </div>
+
+                  {/* RESOURCE GAUGES (HP / MP / FATIGUE) */}
+                  <div className="player-vitals">
+                    <div className="vital-gauge vital-hp">
+                      <div className="vital-header">
+                        <span>HP</span>
+                        <strong>{game.effectiveAttributes.vitality * 100 + game.effectiveAttributes.strength * 20 + level * 50} / {game.effectiveAttributes.vitality * 100 + game.effectiveAttributes.strength * 20 + level * 50}</strong>
+                      </div>
+                      <div className="vital-track">
+                        <motion.div
+                          className="vital-fill vital-fill-hp"
+                          initial={{ width: 0 }}
+                          animate={{ width: "100%" }}
+                          transition={{ duration: 0.8 }}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="vital-gauge vital-mp">
+                      <div className="vital-header">
+                        <span>MP</span>
+                        <strong>{game.effectiveAttributes.intelligence * 80 + game.effectiveAttributes.focus * 40 + level * 30} / {game.effectiveAttributes.intelligence * 80 + game.effectiveAttributes.focus * 40 + level * 30}</strong>
+                      </div>
+                      <div className="vital-track">
+                        <motion.div
+                          className="vital-fill vital-fill-mp"
+                          initial={{ width: 0 }}
+                          animate={{ width: "100%" }}
+                          transition={{ duration: 0.8, delay: 0.1 }}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="vital-gauge vital-fatigue">
+                      <div className="vital-header">
+                        <span>FATIGUE</span>
+                        <strong>{Math.min(100, completedQuestCount * 8)}%</strong>
+                      </div>
+                      <div className="vital-track">
+                        <motion.div
+                          className="vital-fill vital-fill-fatigue"
+                          initial={{ width: 0 }}
+                          animate={{ width: `${Math.min(100, completedQuestCount * 8)}%` }}
+                          transition={{ duration: 0.8, delay: 0.2 }}
+                        />
+                      </div>
+                    </div>
                   </div>
 
                   <div className="attributes">
